@@ -1,0 +1,714 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Study Recorder – UX Mockup</title>
+<style>
+  :root {
+    --bg: #fff; --text: #111; --muted: #8a8a8a; --line: #ececec; --rec: #e5392f;
+    --ease: cubic-bezier(.2, .8, .2, 1);
+  }
+  * { box-sizing: border-box; margin: 0; -webkit-tap-highlight-color: transparent; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; background: #e9e9e9; color: var(--text);
+    min-height: 100vh; display: flex; align-items: center; justify-content: center; gap: 40px; padding: 20px; flex-wrap: wrap; }
+  .phone { width: 375px; height: 760px; background: var(--bg); border-radius: 36px; border: 8px solid #111; position: relative; overflow: hidden;
+    box-shadow: 0 30px 60px -20px rgba(0,0,0,.35); }
+  button, input, select { font-family: inherit; }
+  svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; display: block; }
+  svg.spin { transition: transform .45s var(--ease); }
+
+  /* ---------- screens & transitions ---------- */
+  .screen { position: absolute; inset: 0; display: flex; flex-direction: column; padding-top: 14px; background: var(--bg);
+    opacity: 0; visibility: hidden; pointer-events: none; transform: translateX(32px);
+    transition: transform .38s var(--ease), opacity .26s ease, visibility 0s .38s; }
+  .screen.modal { transform: translateY(40px); }
+  .screen.before { transform: translateX(-24px); }
+  .screen.active { opacity: 1; visibility: visible; pointer-events: auto; transform: none;
+    transition: transform .38s var(--ease), opacity .26s ease, visibility 0s; }
+
+  .appbar { display: flex; align-items: center; gap: 2px; padding: 6px 12px 6px 20px; flex: none; min-height: 52px; }
+  .appbar.has-back { padding-left: 8px; }
+  .appbar h1 { font-size: 22px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; letter-spacing: -.01em; }
+  .ib { width: 40px; height: 40px; border: 0; background: transparent; border-radius: 50%; cursor: pointer; color: var(--text);
+    display: grid; place-items: center; flex: none; position: relative; transition: background .2s, transform .15s var(--ease), color .2s, opacity .25s; }
+  .ib:hover { background: #f3f3f3; }
+  .ib:active { transform: scale(.88); background: #ebebeb; }
+  .ib.on { background: var(--text); color: #fff; }
+  .crumbs { font-size: 12px; color: var(--muted); padding: 0 20px 6px; min-height: 18px; }
+  .content { flex: 1; overflow-y: auto; padding: 0 20px 100px; scrollbar-width: none; }
+  .content::-webkit-scrollbar, .queue::-webkit-scrollbar { width: 0; }
+  .has-mini .content { padding-bottom: 150px; }
+  .section { font-size: 12px; color: var(--muted); margin: 22px 0 4px; }
+
+  /* ---------- rows ---------- */
+  .row { display: flex; align-items: center; gap: 12px; padding: 14px 0; border-bottom: 1px solid var(--line); cursor: pointer; overflow: hidden;
+    transition: background .15s, opacity .28s, height .28s var(--ease), padding .28s var(--ease); }
+  .row:active { background: #f6f6f6; }
+  .row .meta { flex: 1; min-width: 0; }
+  .row .t { font-size: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .row .s { font-size: 13px; color: var(--muted); margin-top: 2px; }
+  .row.playing .t { font-weight: 600; }
+  .row.playing .s::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--text); margin-right: 6px; vertical-align: 1px; animation: pulse 1.2s ease-in-out infinite; }
+  .row.removing { height: 0 !important; padding-top: 0; padding-bottom: 0; opacity: 0; border-bottom-width: 0; }
+  .row.fresh { animation: flash 1.8s ease; }
+  .chev { color: var(--muted); }
+  .chev svg { width: 18px; height: 18px; }
+  .handle { color: var(--muted); cursor: grab; touch-action: none; padding: 6px; margin-left: -6px; }
+  .handle:active { cursor: grabbing; }
+  .row.shifty { transition: transform .22s var(--ease); }
+  .row.lifting { transition: none; position: relative; z-index: 3; background: #fff; box-shadow: 0 10px 28px rgba(0,0,0,.16); border-radius: 12px; padding-left: 10px; padding-right: 10px; margin: 0 -10px; }
+  .row.lifting.settling { transition: transform .22s var(--ease), box-shadow .22s; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  @keyframes flash { 0%, 35% { background: #f0f0f0; } 100% { background: transparent; } }
+  @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  .anim > * { animation: rise .45s var(--ease) both; animation-delay: calc(min(var(--i, 0), 8) * 40ms + 120ms); }
+
+  /* ---------- buttons ---------- */
+  .actions { display: flex; gap: 8px; margin: 6px 0 8px; }
+  .btn { border: 1px solid var(--text); border-radius: 999px; padding: 11px 18px; font-size: 14px; font-weight: 500; cursor: pointer; background: var(--text); color: #fff;
+    transition: transform .15s var(--ease), background .2s, opacity .2s; }
+  .btn:active { transform: scale(.96); }
+  .btn:disabled { opacity: .3; pointer-events: none; }
+  .btn.ghost { background: #fff; color: var(--text); border-color: #d6d6d6; }
+  .btn.text { background: transparent; border-color: transparent; color: var(--rec); }
+  .btn.block { width: 100%; padding: 14px; }
+  .btn.rec { background: var(--rec); border-color: var(--rec); }
+  .main-action { position: absolute; left: 20px; right: 20px; bottom: 20px; display: flex; gap: 8px;
+    transition: bottom .35s var(--ease), transform .35s var(--ease), opacity .25s; }
+  .main-action .btn { flex: 1; padding: 15px; font-size: 15px; }
+  .main-action .btn.text { flex: none; }
+  .main-action.hide { transform: translateY(90px); opacity: 0; pointer-events: none; }
+
+  /* ---------- mini player ---------- */
+  .mini { position: absolute; left: 0; right: 0; bottom: 0; background: #fff; border-top: 1px solid var(--line); padding: 8px 8px 8px 20px;
+    display: flex; align-items: center; gap: 2px; z-index: 5; transform: translateY(110%); transition: transform .4s var(--ease); }
+  .mini.show { transform: none; }
+  .mini .bar { position: absolute; left: 0; top: -1px; height: 2px; background: var(--text); width: 0; }
+  .mini .meta { flex: 1; min-width: 0; cursor: pointer; }
+  .mini .t { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .mini .s { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+  /* ---------- record ---------- */
+  .seg { display: flex; margin: 4px 20px 14px; border-bottom: 1px solid var(--line); position: relative; }
+  .seg button { flex: 1; border: 0; background: none; padding: 10px; font-size: 15px; color: var(--muted); cursor: pointer; transition: color .25s; }
+  .seg button.on { color: var(--text); font-weight: 600; }
+  .seg .ind { position: absolute; bottom: -1px; left: 0; width: 50%; height: 2px; background: var(--text); transition: transform .35s var(--ease); }
+  .viewfinder { flex: 1; margin: 0 20px; border-radius: 18px; background: #f4f4f4; position: relative; display: grid; place-items: center; transition: box-shadow .3s; }
+  .viewfinder.live { animation: ring 1.8s ease-in-out infinite; }
+  @keyframes ring { 0%, 100% { box-shadow: inset 0 0 0 2px rgba(229,57,47,0); } 50% { box-shadow: inset 0 0 0 2px rgba(229,57,47,.55); } }
+  .viewfinder .flip { position: absolute; top: 8px; right: 8px; }
+  .viewfinder .flip.hide { opacity: 0; pointer-events: none; }
+  .viewfinder .cam { position: absolute; top: 18px; left: 18px; font-size: 13px; color: var(--muted); transition: opacity .2s; }
+  .timer { font-size: 58px; font-weight: 300; font-variant-numeric: tabular-nums; letter-spacing: -.02em; text-align: center; }
+  .timer small { display: block; font-size: 13px; color: var(--muted); letter-spacing: 0; font-weight: 400; margin-top: 4px; min-height: 18px; }
+  .recdot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--rec); margin-right: 6px; vertical-align: 1px; animation: pulse 1s ease-in-out infinite; }
+  .controls { display: flex; justify-content: center; align-items: center; gap: 36px; padding: 24px 0 30px; flex: none; }
+  .rec-btn { width: 70px; height: 70px; border-radius: 50%; border: 3px solid var(--text); display: grid; place-items: center; cursor: pointer; background: #fff; transition: transform .15s var(--ease); }
+  .rec-btn:active { transform: scale(.93); }
+  .rec-btn i { width: 52px; height: 52px; border-radius: 50%; background: var(--rec); display: block; transition: width .3s var(--ease), height .3s var(--ease), border-radius .3s var(--ease); }
+  .rec-btn.on i { width: 24px; height: 24px; border-radius: 6px; }
+  .side { width: 56px; height: 56px; transition: opacity .3s, transform .15s var(--ease); }
+  .side:disabled { opacity: .25; cursor: default; pointer-events: none; }
+
+  /* ---------- save ---------- */
+  .form { padding: 8px 20px; display: flex; flex-direction: column; gap: 24px; }
+  .form > * { animation: rise .5s var(--ease) both; }
+  .form > :nth-child(2) { animation-delay: .06s; } .form > :nth-child(3) { animation-delay: .12s; }
+  label { font-size: 12px; color: var(--muted); display: block; margin-bottom: 6px; }
+  input[type=text], select { width: 100%; padding: 10px 0; border: 0; border-bottom: 1px solid #d4d4d4; font-size: 17px; background: transparent; border-radius: 0; color: var(--text); outline: none; transition: border-color .2s; }
+  input[type=text]:focus, select:focus { border-bottom-color: var(--text); }
+  .summary { font-size: 14px; color: var(--muted); }
+
+  /* ---------- player ---------- */
+  .stage { margin: 6px 28px 0; height: 168px; border-radius: 18px; background: #f4f4f4; display: grid; place-items: center; flex: none; color: var(--muted); font-size: 13px; }
+  .bars { display: flex; gap: 6px; align-items: center; height: 56px; }
+  .bars i { width: 4px; height: 100%; background: var(--text); border-radius: 2px; transform: scaleY(.15); animation: eq 1.1s ease-in-out infinite; animation-play-state: paused; }
+  .playing-now .bars i { animation-play-state: running; }
+  .bars i:nth-child(2) { animation-delay: -.3s; } .bars i:nth-child(3) { animation-delay: -.7s; }
+  .bars i:nth-child(4) { animation-delay: -.5s; } .bars i:nth-child(5) { animation-delay: -.9s; } .bars i:nth-child(6) { animation-delay: -.1s; }
+  .bars i:nth-child(7) { animation-delay: -.6s; }
+  @keyframes eq { 0%, 100% { transform: scaleY(.15); } 50% { transform: scaleY(1); } }
+  .np { padding: 22px 28px 4px; flex: none; }
+  .np .kind { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .np .title { font-size: 28px; font-weight: 600; line-height: 1.2; letter-spacing: -.02em; min-height: 68px; }
+  .np.swap > * { animation: rise .4s var(--ease) both; }
+  .seek { padding: 4px 28px 0; }
+  input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; background: transparent; cursor: pointer; display: block; }
+  input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, var(--text) var(--p, 0%), #e3e3e3 var(--p, 0%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--text); margin-top: -5.5px; transition: transform .18s var(--ease); }
+  input[type=range]:active::-webkit-slider-thumb { transform: scale(1.5); }
+  input[type=range]::-moz-range-track { height: 3px; border-radius: 2px; background: #e3e3e3; }
+  input[type=range]::-moz-range-progress { height: 3px; border-radius: 2px; background: var(--text); }
+  input[type=range]::-moz-range-thumb { width: 14px; height: 14px; border: 0; border-radius: 50%; background: var(--text); }
+  .seek .times { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .transport { display: flex; justify-content: center; align-items: center; gap: 12px; padding: 12px 0 6px; flex: none; }
+  .transport .play { width: 64px; height: 64px; background: var(--text); color: #fff; box-shadow: 0 8px 20px -6px rgba(0,0,0,.4); }
+  .transport .play:hover { background: #2a2a2a; }
+  .transport .play svg { width: 26px; height: 26px; }
+  .transport .dim { color: #bdbdbd; }
+  .transport .dim.on { color: var(--text); background: transparent; }
+  .transport .dim::after { content: ""; position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; transform: scale(0); transition: transform .25s var(--ease); }
+  .transport .dim.on::after { transform: scale(1); }
+  .queue { padding: 0 20px; overflow-y: auto; flex: 1; scrollbar-width: none; }
+
+  /* ---------- sheet & toast ---------- */
+  .sheet-bg { position: absolute; inset: 0; display: flex; align-items: flex-end; z-index: 10; background: rgba(0,0,0,0); visibility: hidden;
+    transition: background .3s, visibility 0s .35s; }
+  .sheet-bg.show { background: rgba(0,0,0,.35); visibility: visible; transition: background .3s, visibility 0s; }
+  .sheet { background: #fff; width: 100%; border-radius: 22px 22px 0 0; padding: 22px 20px 24px; display: flex; flex-direction: column; gap: 12px;
+    transform: translateY(100%); transition: transform .38s var(--ease); }
+  .sheet-bg.show .sheet { transform: none; }
+  .sheet h3 { font-size: 16px; font-weight: 600; }
+  .sheet p { font-size: 14px; color: var(--muted); }
+  .sheet .opt { padding: 14px 0; font-size: 16px; cursor: pointer; border-bottom: 1px solid var(--line); transition: opacity .15s; }
+  .sheet .opt:active { opacity: .5; }
+  .sheet .opt:last-child { border-bottom: 0; }
+  .sheet .opt.danger { color: var(--rec); }
+  .toast { position: absolute; left: 50%; top: 18px; transform: translate(-50%, -16px); background: #111; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 13px;
+    opacity: 0; pointer-events: none; transition: transform .35s var(--ease), opacity .25s; z-index: 20; white-space: nowrap; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .empty { color: var(--muted); padding: 40px 0; font-size: 14px; line-height: 1.5; }
+
+  .notes { max-width: 320px; color: #555; font-size: 14px; line-height: 1.6; }
+  .notes h2 { color: #111; margin-bottom: 8px; font-size: 16px; }
+  .notes li { margin-left: 18px; margin-bottom: 6px; }
+
+  @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 5l-7 7 7 7"/></symbol>
+    <symbol id="i-chev" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-more" viewBox="0 0 24 24"><circle cx="12" cy="5" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="12" r="1.5" fill="currentColor" stroke="none"/><circle cx="12" cy="19" r="1.5" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-sort" viewBox="0 0 24 24"><path d="M7 4v16M7 4L3.5 7.5M7 4l3.5 3.5M17 20V4M17 20l-3.5-3.5M17 20l3.5-3.5"/></symbol>
+    <symbol id="i-flip" viewBox="0 0 24 24"><path d="M20 12a8 8 0 0 0-14-5.3M4 4v4h4M4 12a8 8 0 0 0 14 5.3M20 20v-4h-4"/></symbol>
+    <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13l11-6.5z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-pause" viewBox="0 0 24 24"><path d="M7.5 5h3.2v14H7.5zM13.3 5h3.2v14h-3.2z" fill="currentColor" stroke="none"/></symbol>
+    <symbol id="i-next" viewBox="0 0 24 24"><path d="M6 6l9 6-9 6zM18 6v12" fill="currentColor"/></symbol>
+    <symbol id="i-prev" viewBox="0 0 24 24"><path d="M18 6l-9 6 9 6zM6 6v12" fill="currentColor"/></symbol>
+    <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 7h3c5 0 6 10 12 10h3M18 14l3 3-3 3M3 17h3c1.5 0 2.7-.9 3.7-2.2M14.3 9.2C15.3 7.9 16.5 7 18 7h3M18 4l3 3-3 3"/></symbol>
+    <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9a3 3 0 0 1 3-3h13M17 3l3 3-3 3M20 13v2a3 3 0 0 1-3 3H4M7 21l-3-3 3-3"/></symbol>
+    <symbol id="i-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+    <symbol id="i-grip" viewBox="0 0 24 24"><path d="M5 9h14M5 15h14"/></symbol>
+  </defs>
+</svg>
+
+<div class="phone" id="phone">
+  <div class="toast" id="toast"></div>
+
+  <!-- HOME -->
+  <section class="screen active" id="home">
+    <div class="appbar"><h1>Study Recorder</h1></div>
+    <div class="content" id="homeList"></div>
+    <div class="main-action"><button class="btn" onclick="newFolder(null)">New folder</button></div>
+  </section>
+
+  <!-- FOLDER -->
+  <section class="screen" id="folder">
+    <div class="appbar has-back">
+      <button class="ib" onclick="back()"><svg><use href="#i-back"/></svg></button>
+      <h1 id="fTitle"></h1>
+      <button class="ib" id="reorderBtn" title="Rearrange" onclick="toggleReorder()"><svg><use href="#i-sort"/></svg></button>
+    </div>
+    <div class="crumbs" id="fCrumbs"></div>
+    <div class="content" id="folderList"></div>
+    <div class="main-action hide" id="reorderAction"><button class="btn ghost" onclick="cancelReorder()">Cancel</button><button class="btn" onclick="saveReorder()">Save</button></div>
+    <div class="main-action" id="folderAction"><button class="btn ghost" onclick="newFolder(cur)">New folder</button><button class="btn rec" onclick="openRecord()">Record here</button></div>
+  </section>
+
+  <!-- RECORD -->
+  <section class="screen modal" id="record">
+    <div class="appbar has-back"><button class="ib" onclick="cancelRecord()"><svg><use href="#i-close"/></svg></button><h1>New recording</h1></div>
+    <div class="seg" id="modeSeg">
+      <button class="on" data-m="video" onclick="setMode('video')">Video</button>
+      <button data-m="audio" onclick="setMode('audio')">Audio</button>
+      <span class="ind" id="modeInd"></span>
+    </div>
+    <div class="viewfinder" id="vf">
+      <div class="cam" id="camLabel">Back camera</div>
+      <button class="ib flip" id="flipBtn" title="Switch camera" onclick="flipCam()"><svg class="spin" id="flipIco"><use href="#i-flip"/></svg></button>
+      <div class="timer" id="timer">00:00<small>Ready</small></div>
+    </div>
+    <div class="controls">
+      <button class="ib side" id="pauseBtn" disabled onclick="togglePause()"><svg id="pauseIco"><use href="#i-pause"/></svg></button>
+      <div class="rec-btn" id="recBtn" onclick="toggleRec()"><i></i></div>
+      <button class="btn ghost side" style="padding:0" id="doneBtn" disabled onclick="finishRec()">Done</button>
+    </div>
+  </section>
+
+  <!-- SAVE -->
+  <section class="screen modal" id="save">
+    <div class="appbar has-back"><button class="ib" onclick="discard()"><svg><use href="#i-close"/></svg></button><h1>Save recording</h1></div>
+    <div class="form">
+      <div class="summary" id="saveSummary"></div>
+      <div><label>Title</label><input type="text" id="saveTitle" placeholder="e.g. Newton's second law" onkeydown="if(event.key==='Enter')saveRec()"></div>
+    </div>
+    <div class="main-action">
+      <button class="btn text" onclick="discard()">Discard</button>
+      <button class="btn" onclick="saveRec()">Save</button>
+    </div>
+  </section>
+
+  <!-- MOVE PICKER -->
+  <section class="screen modal" id="picker">
+    <div class="appbar has-back"><button class="ib" onclick="pickBack()"><svg><use href="#i-back"/></svg></button><h1>Move to</h1></div>
+    <div class="crumbs" id="pkCrumbs"></div>
+    <div class="content" id="pkList"></div>
+    <div class="main-action"><button class="btn" id="pkBtn" onclick="confirmMove()">Select this folder</button></div>
+  </section>
+
+  <!-- PLAYER -->
+  <section class="screen modal" id="player">
+    <div class="appbar has-back"><button class="ib" onclick="closePlayer()"><svg><use href="#i-down"/></svg></button><h1 id="pFolder" style="font-size:15px;font-weight:500;color:var(--muted)"></h1>
+      <button class="ib" title="Stop and close" onclick="stopAndClose()"><svg><use href="#i-close"/></svg></button></div>
+    <div class="stage" id="stage"></div>
+    <div class="np" id="np"><div class="kind" id="pSub"></div><div class="title" id="pTitle"></div></div>
+    <div class="seek"><input type="range" id="seek" min="0" max="100" step="any" value="0" oninput="seekTo(this.value)">
+      <div class="times"><span id="tCur">0:00</span><span id="tDur">0:00</span></div></div>
+    <div class="transport">
+      <span style="width:40px"></span>
+      <button class="ib" onclick="skip(-1)"><svg><use href="#i-prev"/></svg></button>
+      <button class="ib play" id="playBtn" onclick="togglePlay()"><svg id="playIco"><use href="#i-play"/></svg></button>
+      <button class="ib" onclick="skip(1)"><svg><use href="#i-next"/></svg></button>
+      <button class="ib dim on" id="repBtn" title="Repeat all" onclick="toggleRepeat()"><svg><use href="#i-repeat"/></svg></button>
+    </div>
+    <div class="queue" id="queue"></div>
+  </section>
+
+  <!-- mini player -->
+  <div class="mini" id="mini">
+    <div class="bar" id="mBar"></div>
+    <div class="meta" onclick="show('player')"><div class="t" id="mTitle"></div><div class="s" id="mSub"></div></div>
+    <button class="ib" onclick="togglePlay()"><svg id="mIco"><use href="#i-play"/></svg></button>
+    <button class="ib" title="Stop and close" onclick="stopAndClose()"><svg><use href="#i-close"/></svg></button>
+  </div>
+
+  <!-- bottom sheet -->
+  <div class="sheet-bg" id="sheetBg" onclick="if(event.target===this)closeSheet()"><div class="sheet" id="sheet"></div></div>
+</div>
+
+<div class="notes">
+  <h2>Reviewing this mockup</h2>
+  <p style="margin-bottom:10px"><button class="btn ghost" onclick="systemBack()">◁ Android back (or press Esc)</button></p>
+  <ul>
+    <li>Everything is clickable. Data is fake and resets on reload.</li>
+    <li><b>Folder:</b> Play folder starts the playlist. The sort icon (top right) turns on rearrange mode. Then drag the ☰ handle; it works with mouse and touch.</li>
+    <li><b>Record:</b> Video or Audio, flip camera, record, pause, Done.</li>
+    <li><b>Player:</b> a mini player stays at the bottom while you browse. Playback runs ~4× faster here so you can see it advance.</li>
+  </ul>
+</div>
+
+<script>
+let uid = 100;
+const folders = [
+  { id: 'f1', name: 'Physics', parent: null, created: 1 },
+  { id: 'f2', name: 'Chemistry', parent: null, created: 2 },
+  { id: 'f3', name: 'Mechanics', parent: 'f1', created: 5 },
+  { id: 'f4', name: 'History', parent: null, created: 3 },
+];
+const recs = [
+  { id: 'r1', title: "Newton's first law", type: 'video', dur: 118, folder: 'f3', date: 'Oct 6', created: 10 },
+  { id: 'r2', title: "Newton's second law", type: 'video', dur: 124, folder: 'f3', date: 'Oct 6', created: 11 },
+  { id: 'r3', title: 'Work and energy', type: 'audio', dur: 96, folder: 'f1', date: 'Oct 5', created: 4 },
+  { id: 'r4', title: 'Electric field basics', type: 'audio', dur: 121, folder: 'f1', date: 'Oct 7', created: 12 },
+  { id: 'r5', title: 'Periodic table trends', type: 'video', dur: 110, folder: 'f2', date: 'Oct 4', created: 8 },
+  { id: 'r6', title: 'French Revolution causes', type: 'audio', dur: 105, folder: 'f4', date: 'Oct 3', created: 9 },
+];
+// user's custom order per folder: { folderId: [itemId, ...] }. No entry = ordered by created time.
+const order = {};
+
+const $ = id => document.getElementById(id);
+const ico = n => `<svg><use href="#i-${n}"/></svg>`;
+let cur = null, reorder = false, draft = null, freshId = null, flipRot = 0, toastT = null;
+let rec = { mode: 'video', cam: 'Back', state: 'idle', secs: 0, timer: null, target: null };
+let pl = { list: [], i: 0, playing: false, pos: 0, timer: null, repeat: true, folder: null, lastId: null };
+
+const fmt = s => Math.floor(s / 60) + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+const fmtT = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+const esc = s => s.replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const kids = id => folders.filter(f => f.parent === id);
+// everything inside a folder (subfolders + recordings): created-time order by default, the user's order once rearranged
+function items(cid) {
+  const all = [...kids(cid).map(o => ({ k: 'f', o })), ...recs.filter(r => r.folder === cid).map(o => ({ k: 'r', o }))].sort((a, b) => a.o.created - b.o.created);
+  const ord = order[cid]; if (!ord) return all;
+  const pos = id => { const i = ord.indexOf(id); return i < 0 ? Infinity : i; };
+  return all.sort((a, b) => pos(a.o.id) - pos(b.o.id));
+}
+const inFolder = id => items(id).filter(x => x.k === 'r').map(x => x.o);
+const path = id => { const out = []; while (id) { const f = folders.find(x => x.id === id); out.unshift(f.name); id = f.parent; } return out.join(' / '); };
+const kindLabel = t => t === 'video' ? 'Video' : 'Audio';
+function setHTML(el, html) { if (el._h === html) return; el._h = html; el.innerHTML = html; }
+
+function toast(t) {
+  const el = $('toast'); el.textContent = t; el.classList.add('show');
+  clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 1700);
+}
+function animateList(el) {
+  [...el.children].forEach((c, i) => c.style.setProperty('--i', i));
+  el.classList.remove('anim'); void el.offsetWidth; el.classList.add('anim');
+  clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('anim'), 1000);
+}
+
+/* ---------- navigation ---------- */
+const LEVEL = { home: 0, folder: 1, record: 2, save: 2, player: 2, picker: 2 };
+function show(name) {
+  document.querySelectorAll('.screen').forEach(s => {
+    const on = s.id === name;
+    s.classList.toggle('active', on);
+    if (!on) s.classList.toggle('before', LEVEL[s.id] < 2 && LEVEL[s.id] < LEVEL[name]);
+  });
+  const miniOn = pl.list.length > 0 && (name === 'home' || name === 'folder');
+  $('mini').classList.toggle('show', miniOn);
+  $('phone').classList.toggle('has-mini', miniOn);
+  document.querySelectorAll('.main-action').forEach(el => el.style.bottom = miniOn ? '74px' : '20px');
+  if (name === 'player') renderPlayer();
+  if (name === 'save') setTimeout(() => $('saveTitle').focus(), 450);
+}
+function back() { if (reorder) { cancelReorder(); return; } const f = folders.find(x => x.id === cur); if (f && f.parent) openFolder(f.parent); else goHome(); }
+function goHome() { cur = null; reorder = false; renderHome(true); show('home'); }
+
+/* ---------- home ---------- */
+function renderHome(animate) {
+  const top = kids(null);
+  $('homeList').innerHTML = top.length ? top.map(folderRow).join('') : '<div class="empty">No folders yet. Create one for each subject.</div>';
+  if (animate) animateList($('homeList'));
+}
+function count(id) { let n = inFolder(id).length; kids(id).forEach(k => n += count(k.id)); return n; }
+function folderRow(f) {
+  const sub = kids(f.id).length;
+  return `<div class="row" data-fid="${f.id}" data-id="${f.id}" onclick="${reorder ? '' : `openFolder('${f.id}')`}">
+    ${reorder ? `<span class="handle">${ico('grip')}</span>` : ''}
+    <div class="meta"><div class="t">${esc(f.name)}</div>
+    <div class="s">${count(f.id)} recordings${sub ? ' · ' + sub + ' subfolder' + (sub > 1 ? 's' : '') : ''}</div></div>
+    ${reorder ? '' : `<button class="ib" onclick="event.stopPropagation();folderMenu('${f.id}')">${ico('more')}</button>`}</div>`;
+}
+
+/* ---------- folder ---------- */
+function openFolder(id) { cur = id; reorder = false; renderFolder(true); show('folder'); }
+function renderFolder(animate) {
+  const f = folders.find(x => x.id === cur);
+  $('fTitle').textContent = f.name;
+  $('fCrumbs').textContent = f.parent ? path(cur) : '';
+  $('reorderBtn').classList.toggle('on', reorder);
+  $('folderAction').classList.toggle('hide', reorder);
+  $('reorderAction').classList.toggle('hide', !reorder);
+  const list_ = items(cur), rs = inFolder(cur);
+  if (reorder && draft) list_.sort((a, b) => draft.indexOf(a.o.id) - draft.indexOf(b.o.id));
+  let h = '';
+  if (rs.length && !reorder) h += `<div class="actions"><button class="btn" onclick="playFolder('${cur}')">Play folder</button></div>`;
+  if (reorder) h += `<div class="section" style="margin-top:8px">Drag to change the order</div>`;
+  // subfolders and recordings share one list, no section headers
+  h += list_.map(x => x.k === 'f' ? folderRow(x.o) : recRow(x.o)).join('');
+  if (!list_.length) h += '<div class="empty">Nothing here yet. Tap “Record here” to add your first explanation.</div>';
+  const list = $('folderList');
+  list.classList.remove('anim');
+  list.innerHTML = h;
+  if (animate) animateList(list);
+  if (reorder) wireDrag();
+  if (animate) list.scrollTop = 0;
+}
+function recRow(r) {
+  const playing = pl.list[pl.i] && pl.list[pl.i].id === r.id && pl.playing;
+  const cls = (playing ? ' playing' : '') + (r.id === freshId ? ' fresh' : '');
+  return `<div class="row${cls}" data-id="${r.id}" onclick="${reorder ? '' : `playOne('${r.id}')`}">
+    ${reorder ? `<span class="handle">${ico('grip')}</span>` : ''}
+    <div class="meta"><div class="t">${esc(r.title)}</div><div class="s">${kindLabel(r.type)} · ${fmt(r.dur)} · ${r.date}</div></div>
+    ${reorder ? '' : `<button class="ib" onclick="event.stopPropagation();recMenu('${r.id}')">${ico('more')}</button>`}</div>`;
+}
+function toggleReorder() { if (reorder) cancelReorder(); else { reorder = true; draft = items(cur).map(x => x.o.id); renderFolder(false); } }
+function cancelReorder() { reorder = false; draft = null; renderFolder(false); }
+function saveReorder() {
+  order[cur] = draft; reorder = false; draft = null;
+  if (pl.folder === cur && pl.list.length) { const c = pl.list[pl.i]; pl.list = inFolder(cur); pl.i = pl.list.indexOf(c); renderPlayer(); }
+  renderFolder(false); toast('Order saved');
+}
+function markPlaying() {
+  const cid = pl.list[pl.i] && pl.list[pl.i].id;
+  document.querySelectorAll('#folderList .row[data-id]').forEach(r => r.classList.toggle('playing', pl.playing && r.dataset.id === cid));
+}
+
+/* pointer-based drag to reorder: works with mouse and touch */
+function wireDrag() {
+  const list = $('folderList');
+  list.querySelectorAll('.handle').forEach(h => h.addEventListener('pointerdown', e => {
+    e.preventDefault();
+    const row = h.closest('.row');
+    const rows = [...list.querySelectorAll('.row[data-id]')];
+    const from = rows.indexOf(row);
+    const rects = rows.map(r => r.getBoundingClientRect());
+    const hgt = rects[from].height, startY = e.clientY;
+    let to = from;
+    row.classList.add('lifting');
+    rows.forEach(r => { if (r !== row) r.classList.add('shifty'); });
+    h.setPointerCapture(e.pointerId);
+
+    const move = ev => {
+      const dy = ev.clientY - startY;
+      row.style.transform = `translateY(${dy}px)`;
+      const center = rects[from].top + hgt / 2 + dy;
+      to = from;
+      rects.forEach((rc, k) => {
+        const mid = rc.top + rc.height / 2;
+        if (k < from && center < mid) to = Math.min(to, k);
+        if (k > from && center > mid) to = Math.max(to, k);
+      });
+      rows.forEach((r, k) => {
+        if (r === row) return;
+        let s = 0;
+        if (from < to && k > from && k <= to) s = -hgt;
+        if (from > to && k < from && k >= to) s = hgt;
+        r.style.transform = s ? `translateY(${s}px)` : '';
+      });
+    };
+    const up = () => {
+      h.removeEventListener('pointermove', move);
+      h.removeEventListener('pointerup', up);
+      h.removeEventListener('pointercancel', up);
+      row.classList.add('settling');
+      row.style.transform = `translateY(${rects[to].top - rects[from].top}px)`;
+      setTimeout(() => {
+        if (to !== from) { const [m] = draft.splice(from, 1); draft.splice(to, 0, m); } // draft only; Save commits it
+        renderFolder(false);
+      }, 230);
+    };
+    h.addEventListener('pointermove', move);
+    h.addEventListener('pointerup', up);
+    h.addEventListener('pointercancel', up);
+  }));
+}
+
+/* ---------- sheets / dialogs ---------- */
+function openSheet(html) {
+  const s = $('sheet'); s.innerHTML = html; $('sheetBg').classList.add('show');
+  const inp = s.querySelector('input[type=text]');
+  if (inp) {
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { const b = s.querySelector('.btn:not(.ghost):not(.text)'); if (b) b.click(); } });
+    setTimeout(() => { inp.focus(); inp.select(); }, 360);
+  }
+}
+function closeSheet() { $('sheetBg').classList.remove('show'); if (document.activeElement) document.activeElement.blur(); }
+function folderMenu(id) {
+  openSheet(`<h3>${esc(folders.find(f => f.id === id).name)}</h3>
+    <div class="opt" onclick="renameFolder('${id}')">Rename</div>
+    <div class="opt danger" onclick="deleteFolder('${id}')">Delete</div>`);
+}
+function newFolder(parent) {
+  openSheet(`<h3>${parent ? 'New subfolder' : 'New folder'}</h3><input type="text" id="nfName" placeholder="Name">
+    <button class="btn block" onclick="createFolder(${parent ? `'${parent}'` : 'null'})">Create</button>`);
+}
+function createFolder(parent) {
+  const n = $('nfName').value.trim(); if (!n) return;
+  folders.push({ id: 'f' + (++uid), name: n, parent, created: Date.now() }); closeSheet(); toast('Folder created');
+  if (parent) renderFolder(true); else renderHome(true);
+}
+function renameFolder(id) {
+  const f = folders.find(x => x.id === id);
+  openSheet(`<h3>Rename folder</h3><input type="text" id="rnName" value="${esc(f.name)}"><button class="btn block" onclick="doRenameFolder('${id}')">Save</button>`);
+}
+function doRenameFolder(id) {
+  const n = $('rnName').value.trim(); if (!n) return;
+  folders.find(x => x.id === id).name = n; closeSheet(); refreshList();
+}
+function refreshList() { if (cur) renderFolder(false); else renderHome(false); }
+function deleteFolder(id) {
+  openSheet(`<h3>Delete this folder?</h3><p>${count(id)} recordings inside will also be deleted.</p>
+    <button class="btn block" style="background:var(--rec);border-color:var(--rec)" onclick="doDeleteFolder('${id}')">Delete</button><button class="btn ghost block" onclick="closeSheet()">Cancel</button>`);
+}
+function doDeleteFolder(id) {
+  closeSheet();
+  const el = document.querySelector(`.row[data-fid="${id}"]`);
+  const finish = () => {
+    const ids = []; (function walk(x) { ids.push(x); kids(x).forEach(k => walk(k.id)); })(id);
+    for (let i = recs.length - 1; i >= 0; i--) if (ids.includes(recs[i].folder)) recs.splice(i, 1);
+    for (let i = folders.length - 1; i >= 0; i--) if (ids.includes(folders[i].id)) folders.splice(i, 1);
+    if (pl.list.length && !recs.find(r => r.id === pl.list[pl.i].id)) stopPlayer();
+    refreshList(); show(cur ? 'folder' : 'home'); toast('Folder deleted');
+  };
+  if (el) { el.style.height = el.offsetHeight + 'px'; void el.offsetHeight; el.classList.add('removing'); setTimeout(finish, 300); } else finish();
+}
+function recMenu(id) {
+  const r = recs.find(x => x.id === id);
+  openSheet(`<h3>${esc(r.title)}</h3>
+    <div class="opt" onclick="renameRec('${id}')">Rename</div>
+    <div class="opt" onclick="moveRec('${id}')">Move to folder</div>
+    <div class="opt danger" onclick="delRec('${id}')">Delete</div>`);
+}
+function renameRec(id) {
+  const r = recs.find(x => x.id === id);
+  openSheet(`<h3>Rename</h3><input type="text" id="rrName" value="${esc(r.title)}"><button class="btn block" onclick="doRenameRec('${id}')">Save</button>`);
+}
+function doRenameRec(id) { const n = $('rrName').value.trim(); if (!n) return; recs.find(x => x.id === id).title = n; closeSheet(); renderFolder(false); }
+function moveRec(id) { closeSheet(); pk = { id, loc: null }; renderPicker(true); show('picker'); }
+let pk = { id: null, loc: null };
+function renderPicker(animate) {
+  const r = recs.find(x => x.id === pk.id);
+  $('pkCrumbs').textContent = pk.loc ? path(pk.loc) : 'All folders';
+  const subs = kids(pk.loc);
+  $('pkList').innerHTML = subs.length ? subs.map(f => `<div class="row" onclick="pickGo('${f.id}')"><div class="meta"><div class="t">${esc(f.name)}</div>
+    <div class="s">${f.id === r.folder ? 'Current folder' : count(f.id) + ' recordings'}</div></div><span class="chev">${ico('chev')}</span></div>`).join('')
+    : '<div class="empty">No subfolders here.</div>';
+  if (animate) animateList($('pkList'));
+  const same = pk.loc === r.folder, btn = $('pkBtn');
+  btn.disabled = !pk.loc || same;
+  btn.textContent = !pk.loc ? 'Open a folder to select it' : same ? 'Already in this folder' : 'Select this folder';
+}
+function pickGo(id) { pk.loc = id; renderPicker(true); }
+function pickBack() { if (pk.loc) { pk.loc = folders.find(f => f.id === pk.loc).parent; renderPicker(true); } else show('folder'); }
+function confirmMove() {
+  const r = recs.find(x => x.id === pk.id), dest = pk.loc;
+  show('folder');
+  setTimeout(() => {
+    const el = document.querySelector(`#folderList .row[data-id="${r.id}"]`);
+    const done = () => { r.folder = dest; renderFolder(false); toast('Moved to ' + folders.find(f => f.id === dest).name); };
+    if (el) { el.style.height = el.offsetHeight + 'px'; void el.offsetHeight; el.classList.add('removing'); setTimeout(done, 290); } else done();
+  }, 350);
+}
+function delRec(id) {
+  closeSheet();
+  const el = document.querySelector(`#folderList .row[data-id="${id}"]`);
+  const finish = () => {
+    const k = pl.list.findIndex(x => x.id === id);
+    if (k >= 0) { if (pl.list.length === 1) stopPlayer(); else { pl.list.splice(k, 1); if (k < pl.i) pl.i--; else if (k === pl.i) { pl.i %= pl.list.length; pl.pos = 0; } } }
+    recs.splice(recs.findIndex(x => x.id === id), 1);
+    renderFolder(false); show('folder'); toast('Recording deleted');
+  };
+  if (el) { el.style.height = el.offsetHeight + 'px'; void el.offsetHeight; el.classList.add('removing'); setTimeout(finish, 300); } else finish();
+}
+
+/* ---------- record ---------- */
+function openRecord() { rec.target = cur; resetRec(); setMode('video'); show('record'); }
+function resetRec() {
+  clearInterval(rec.timer); rec.state = 'idle'; rec.secs = 0;
+  $('timer').innerHTML = '00:00<small>Ready</small>'; $('recBtn').classList.remove('on'); $('vf').classList.remove('live');
+  $('pauseBtn').disabled = true; $('doneBtn').disabled = true; $('modeSeg').style.pointerEvents = '';
+  $('pauseIco').innerHTML = '<use href="#i-pause"/>';
+}
+function setMode(m) {
+  rec.mode = m;
+  document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
+  $('modeInd').style.transform = m === 'video' ? 'translateX(0)' : 'translateX(100%)';
+  $('flipBtn').classList.toggle('hide', m !== 'video');
+  $('camLabel').textContent = m === 'video' ? rec.cam + ' camera' : 'Microphone only';
+}
+function flipCam() {
+  rec.cam = rec.cam === 'Back' ? 'Front' : 'Back'; $('camLabel').textContent = rec.cam + ' camera';
+  flipRot += 180; $('flipIco').style.transform = `rotate(${flipRot}deg)`;
+}
+function showTime(label, live) { $('timer').innerHTML = fmtT(rec.secs) + `<small>${live ? '<span class="recdot"></span>' : ''}${label}</small>`; }
+function tick() { if (rec.state === 'recording') { rec.secs++; showTime('Recording', true); } }
+function toggleRec() {
+  if (rec.state === 'idle') {
+    rec.state = 'recording'; rec.timer = setInterval(tick, 1000);
+    $('recBtn').classList.add('on'); $('vf').classList.add('live');
+    $('pauseBtn').disabled = false; $('doneBtn').disabled = false; $('modeSeg').style.pointerEvents = 'none';
+    showTime('Recording', true);
+  } else finishRec();
+}
+function togglePause() {
+  if (rec.state === 'recording') { rec.state = 'paused'; $('pauseIco').innerHTML = '<use href="#i-play"/>'; $('vf').classList.remove('live'); showTime('Paused', false); }
+  else if (rec.state === 'paused') { rec.state = 'recording'; $('pauseIco').innerHTML = '<use href="#i-pause"/>'; $('vf').classList.add('live'); showTime('Recording', true); }
+}
+function finishRec() {
+  if (rec.state === 'idle') return;
+  clearInterval(rec.timer); if (rec.secs < 1) rec.secs = 1;
+  $('saveSummary').textContent = kindLabel(rec.mode) + ' · ' + fmt(rec.secs) + ' · Saving to ' + path(rec.target);
+  $('saveTitle').value = '';
+  show('save');
+  // re-trigger the form entrance animation
+  const f = document.querySelector('#save .form'); f.style.animation = 'none'; void f.offsetWidth; f.style.animation = '';
+  [...f.children].forEach(c => { c.style.animation = 'none'; void c.offsetWidth; c.style.animation = ''; });
+}
+function cancelRecord() { show('folder'); setTimeout(resetRec, 400); }
+function discard() { show('folder'); toast('Recording discarded'); setTimeout(resetRec, 400); }
+function saveRec() {
+  const t = $('saveTitle').value.trim() || 'Untitled recording';
+  const f = rec.target, id = 'r' + (++uid);
+  recs.push({ id, title: t, type: rec.mode, dur: rec.secs, folder: f, date: 'Today', created: Date.now() });
+  cur = f; freshId = id; renderFolder(true); show('folder');
+  setTimeout(() => { freshId = null; resetRec(); }, 1900);
+  setTimeout(() => toast('Saved to ' + folders.find(x => x.id === f).name), 350);
+  const el = document.querySelector(`#folderList .row[data-id="${id}"]`); if (el) setTimeout(() => el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }), 500);
+}
+
+/* ---------- player ---------- */
+function playFolder(id) {
+  const list = inFolder(id).slice(); if (!list.length) return;
+  pl.folder = id;
+  pl.list = list; pl.i = 0; startPlay(); show('player');
+}
+function playOne(id) {
+  const r = recs.find(x => x.id === id);
+  pl.folder = r.folder; pl.list = inFolder(r.folder); pl.i = pl.list.findIndex(x => x.id === id); startPlay(); show('player');
+}
+function startPlay() { pl.pos = 0; pl.playing = true; runTimer(); renderPlayer(); }
+function runTimer() {
+  clearInterval(pl.timer);
+  pl.timer = setInterval(() => {
+    if (!pl.playing || !pl.list.length) return;
+    pl.pos += 0.4; // ~4x real speed so the mockup is easy to review
+    const d = pl.list[pl.i].dur;
+    if (pl.pos >= d) {
+      if (pl.i < pl.list.length - 1) { pl.i++; pl.pos = 0; }
+      else if (pl.repeat) { pl.i = 0; pl.pos = 0; }
+      else { pl.playing = false; pl.pos = d; }
+      renderPlayer();
+    } else renderProgress();
+  }, 100);
+}
+function renderProgress() {
+  const r = pl.list[pl.i]; if (!r) return;
+  const p = Math.min(100, pl.pos / r.dur * 100);
+  const s = $('seek'); s.max = r.dur; s.value = pl.pos; s.style.setProperty('--p', p + '%');
+  $('tCur').textContent = fmt(pl.pos); $('tDur').textContent = fmt(r.dur); $('mBar').style.width = p + '%';
+}
+function renderPlayer() {
+  const r = pl.list[pl.i]; if (!r) return;
+  $('pFolder').textContent = path(pl.folder);
+  $('pSub').textContent = kindLabel(r.type) + ' · ' + (pl.i + 1) + ' of ' + pl.list.length;
+  $('pTitle').textContent = r.title;
+  $('stage').innerHTML = r.type === 'audio' ? '<div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>' : 'Video';
+  $('stage').classList.toggle('playing-now', pl.playing);
+  if (pl.lastId !== r.id) {
+    pl.lastId = r.id;
+    const np = $('np'); np.classList.remove('swap'); void np.offsetWidth; np.classList.add('swap');
+  }
+  const pi = pl.playing ? '<use href="#i-pause"/>' : '<use href="#i-play"/>';
+  $('playIco').innerHTML = pi; $('mIco').innerHTML = pi;
+  $('mTitle').textContent = r.title; $('mSub').textContent = path(pl.folder) + ' · ' + (pl.i + 1) + '/' + pl.list.length;
+  $('repBtn').classList.toggle('on', pl.repeat);
+  setHTML($('queue'), '<div class="section" style="margin-top:12px">Up next</div>' + pl.list.map((x, k) =>
+    `<div class="row ${k === pl.i ? 'playing' : ''}" onclick="pl.i=${k};startPlay()"><div class="meta"><div class="t">${esc(x.title)}</div><div class="s">${kindLabel(x.type)} · ${fmt(x.dur)}</div></div></div>`).join(''));
+  renderProgress(); markPlaying();
+}
+function togglePlay() { pl.playing = !pl.playing; renderPlayer(); }
+function skip(d) { pl.i = (pl.i + d + pl.list.length) % pl.list.length; pl.pos = 0; renderPlayer(); }
+function seekTo(v) { pl.pos = +v; renderProgress(); }
+function toggleRepeat() { pl.repeat = !pl.repeat; renderPlayer(); }
+function stopAndClose() {
+  stopPlayer(); markPlaying();
+  const a = document.querySelector('.screen.active').id;
+  show(a === 'player' ? (cur ? 'folder' : 'home') : a);
+}
+/* Android system back: full-screen player -> minimised; any other screen -> previous screen (mini player stays) */
+function systemBack() {
+  if ($('sheetBg').classList.contains('show')) { closeSheet(); return; }
+  const a = document.querySelector('.screen.active').id;
+  if (a === 'player') closePlayer();
+  else if (a === 'picker') pickBack();
+  else if (a === 'record') cancelRecord();
+  else if (a === 'save') discard();
+  else if (a === 'folder') back();
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') systemBack(); });
+function closePlayer() { show(cur ? 'folder' : 'home'); }
+function stopPlayer() { clearInterval(pl.timer); pl.list = []; pl.i = 0; pl.playing = false; pl.lastId = null; $('mini').classList.remove('show'); $('phone').classList.remove('has-mini'); }
+
+renderHome(true);
+</script>
+</body>
+</html>
