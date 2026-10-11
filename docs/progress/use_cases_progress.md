@@ -1,6 +1,6 @@
 # Use cases progress
 
-Status: Done (waiting for user review)
+Status: Done (approved by the user, 2026-10-11)
 Last updated: 2026-10-11
 
 ## Checklist
@@ -44,4 +44,4 @@ Newest first.
 
 ## Open issues / decisions
 - **Recording and playback devices are not built yet.** Recording (`camera`, `record`) and playback (`just_audio`, `video_player`) talk to the device, and are not covered by this phase's use cases. They need their own interfaces in `data/` (for example a recorder and a player repository), and use cases such as start, pause and stop recording, and the player controls. Proposal: add them at the start of the Features phase, just before the Record and Player features, and log the additions here and in the data layer progress file. Please confirm.
-- `AppDependencies.init()` is not called from `main.dart` yet. That is done with the first feature.
+- `AppDependencies.init()` is now called from `main.dart` (Folder feature, see `features_progress.md`).

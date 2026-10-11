@@ -1,6 +1,6 @@
 # Data layer progress
 
-Status: Done (waiting for user review)
+Status: Done (approved by the user)
 Last updated: 2026-10-11
 
 ## Checklist
