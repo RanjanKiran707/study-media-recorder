@@ -5,7 +5,7 @@ import 'package:study_recorder/core/errors/failure.dart';
 import 'package:study_recorder/core/errors/result.dart';
 import 'package:study_recorder/data/folder/folder_model.dart';
 
-import 'repository_test_helpers.dart';
+import '../repository_test_helpers.dart';
 
 void main() {
   late DataTestEnv env;
