@@ -1,2 +1,13 @@
 .DS_Store
 *.log
+
+# Flutter
+.dart_tool/
+build/
+.flutter-plugins*
+*.iml
+.idea/
+android/local.properties
+android/.gradle/
+android/key.properties
+*.jks
