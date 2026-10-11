@@ -14,7 +14,6 @@ Packages needed by `project_specs/product_spec.md`. Result, ViewState, state man
 | `just_audio` | Playlist playback: next, previous, seek, repeat all, gapless advance. Plays the audio of audio recordings and keeps going with the screen off. | `data/` (player) |
 | `just_audio_background` | Background playback with a notification and lock-screen controls, so night revision keeps playing. | `data/` (player), `main.dart` |
 | `video_player` | Shows the picture while a video recording plays. | `features/` (player view) |
-| `permission_handler` | Ask for camera, microphone and notification permission, and explain a refusal. | `data/` |
 | `uuid` | Ids for folders and recordings. | ViewModels / use cases |
 | `wakelock_plus` | Keep the screen on while recording. | `features/` (record view) |
 
@@ -25,7 +24,7 @@ Packages needed by `project_specs/product_spec.md`. Result, ViewState, state man
 | `drift_dev` | Generates the database code. |
 | `build_runner` | Runs the drift generator. |
 | `mocktail` | Fakes for the ViewModel and use case unit tests. |
-| `integration_test` (Flutter SDK) | Key journeys: record, save, play folder. |
+| `integration_test` (Flutter SDK) | Key journeys: record, save, play. |
 
 ## Points to decide
 
@@ -35,3 +34,9 @@ Packages needed by `project_specs/product_spec.md`. Result, ViewState, state man
 ## Deliberately not added
 
 State management (`ValueNotifier` is enough), dependency injection (hand-written in `AppDependencies`), navigation (`Navigator.push`), cloud, sharing and analytics packages (out of scope).
+
+## Changes
+| Date | Change | Why |
+|---|---|---|
+| 2026-10-11 | `permission_handler` removed | Its Android plugin (14.1.0) does not compile with this project's Gradle and Kotlin setup. `camera` and `record` ask for their own permissions, and a refusal becomes `permission_denied` in `RecorderRepository` |
+| 2026-10-11 | No Material widgets | The UI uses `package:flutter/widgets.dart` only, with `CupertinoIcons` for icons. A test checks that nothing in `lib/` imports `material.dart` |

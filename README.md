@@ -1,16 +1,22 @@
-# study_recorder
+# Study Recorder
 
-A new Flutter project.
+An Android app that records short (about two minute) audio or video explanations,
+keeps them in folders and subfolders, and plays a folder as a playlist for
+revision. One user, offline, no login.
 
-## Getting Started
+- Product spec and UI mockup: `project_specs/`
+- Architecture and process: `project_specs/flutter_arch_general.md`, `project_specs/flutter_development_process.md`
+- Progress and decisions: `docs/progress/`
+- Dependencies and why: `docs/dependencies.md`
 
-This project is a starting point for a Flutter application.
+## Run
 
-A few resources to get you started if this is your first Flutter project:
+```
+flutter pub get
+flutter run                      # on a connected Android phone
+flutter test                     # unit and widget tests
+flutter test integration_test -d <device>
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+The app is portrait only. The launcher icon is the record button (white ring, red
+dot) on a dark tile; its source layers are in `android/app/src/main/res/mipmap-*`.

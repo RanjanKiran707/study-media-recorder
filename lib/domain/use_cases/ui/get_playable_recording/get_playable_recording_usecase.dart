@@ -30,6 +30,7 @@ class GetPlayableRecordingUsecase {
       return Ok(
         PlayableItem(
           recordingId: found.id,
+          folderId: found.folderId,
           title: found.title,
           folderName: f.name,
           type: found.type,

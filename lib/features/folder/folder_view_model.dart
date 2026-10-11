@@ -9,6 +9,7 @@ import 'package:study_recorder/domain/use_cases/business/create_folder/create_fo
 import 'package:study_recorder/domain/use_cases/business/create_folder/create_folder_usecase.dart';
 import 'package:study_recorder/domain/use_cases/business/delete_folder/delete_folder_usecase.dart';
 import 'package:study_recorder/domain/use_cases/business/delete_recording/delete_recording_usecase.dart';
+import 'package:study_recorder/domain/use_cases/business/play_recording/play_recording_usecase.dart';
 import 'package:study_recorder/domain/use_cases/business/rename_folder/rename_folder_usecase.dart';
 import 'package:study_recorder/domain/use_cases/business/rename_recording/rename_recording_usecase.dart';
 import 'package:study_recorder/domain/use_cases/business/save_order/ordered_item.dart';
@@ -17,6 +18,8 @@ import 'package:study_recorder/domain/use_cases/ui/get_folder_path/get_folder_pa
 import 'package:study_recorder/domain/use_cases/ui/get_folder_path/get_folder_path_usecase.dart';
 import 'package:study_recorder/domain/use_cases/ui/list_folder_items/list_folder_items_return_model.dart';
 import 'package:study_recorder/domain/use_cases/ui/list_folder_items/list_folder_items_usecase.dart';
+import 'package:study_recorder/domain/use_cases/ui/watch_player/watch_player_return_model.dart';
+import 'package:study_recorder/domain/use_cases/ui/watch_player/watch_player_usecase.dart';
 
 /// [folderId] null is the Home screen (top-level folders only).
 class FolderBundle {
@@ -32,8 +35,10 @@ class FolderViewModel {
   final RenameRecordingUsecase _renameRecording;
   final DeleteRecordingUsecase _deleteRecording;
   final SaveOrderUsecase _saveOrder;
+  final PlayRecordingUsecase _playRecording;
   final GetFolderPathUsecase _getFolderPath;
   final ListFolderItemsUsecase _listFolderItems;
+  final WatchPlayerUsecase _watchPlayer;
   final String Function() _newId;
 
   /// The list of this folder. Live: it changes when the data changes.
@@ -49,10 +54,20 @@ class FolderViewModel {
     const ViewStateIdle(),
   );
 
+  /// State of starting playback of a tapped recording. Loaded means the player
+  /// is playing, and the View opens it.
+  final ValueNotifier<ViewState<void>> playState = ValueNotifier(
+    const ViewStateIdle(),
+  );
+
+  /// The recording that is playing now, to mark its row. Null when none.
+  final ValueNotifier<String?> playingRecordingId = ValueNotifier(null);
+
   /// The list being rearranged, or null when not in rearrange mode.
   final ValueNotifier<List<FolderItem>?> rearrangeItems = ValueNotifier(null);
 
   StreamSubscription<Result<ListFolderItemsReturnModel>>? _subscription;
+  StreamSubscription<Result<WatchPlayerReturnModel>>? _playerSubscription;
   bool _disposed = false;
 
   FolderViewModel({
@@ -63,8 +78,10 @@ class FolderViewModel {
     required RenameRecordingUsecase renameRecording,
     required DeleteRecordingUsecase deleteRecording,
     required SaveOrderUsecase saveOrder,
+    required PlayRecordingUsecase playRecording,
     required GetFolderPathUsecase getFolderPath,
     required ListFolderItemsUsecase listFolderItems,
+    required WatchPlayerUsecase watchPlayer,
     String Function() newId = generateId,
   }) : _createFolder = createFolder,
        _renameFolder = renameFolder,
@@ -72,14 +89,24 @@ class FolderViewModel {
        _renameRecording = renameRecording,
        _deleteRecording = deleteRecording,
        _saveOrder = saveOrder,
+       _playRecording = playRecording,
        _getFolderPath = getFolderPath,
        _listFolderItems = listFolderItems,
+       _watchPlayer = watchPlayer,
        _newId = newId {
     _subscription = _listFolderItems(bundle.folderId).listen((result) {
       state.value = result.fold(
         (failure) => ViewStateError(failure),
         (data) => ViewStateLoaded(data),
       );
+    });
+    _playerSubscription = _watchPlayer().listen((result) {
+      result.fold((_) {}, (player) {
+        final id = player.isActive && player.playing
+            ? player.recordingId
+            : null;
+        if (playingRecordingId.value != id) playingRecordingId.value = id;
+      });
     });
     _loadPath();
   }
@@ -100,7 +127,7 @@ class FolderViewModel {
     );
   }
 
-  Future<void> onCreateFolder(String name) {
+  Future<bool> onCreateFolder(String name) {
     return _run(
       () => _createFolder(
         CreateFolderArgumentModel(
@@ -112,30 +139,52 @@ class FolderViewModel {
     );
   }
 
-  Future<void> onRenameFolder(String folderId, String name) =>
+  Future<bool> onRenameFolder(String folderId, String name) =>
       _run(() => _renameFolder(folderId, name));
 
-  Future<void> onDeleteFolder(String folderId) =>
+  Future<bool> onDeleteFolder(String folderId) =>
       _run(() => _deleteFolder(folderId));
 
-  Future<void> onRenameRecording(String recordingId, String title) =>
+  Future<bool> onRenameRecording(String recordingId, String title) =>
       _run(() => _renameRecording(recordingId, title));
 
-  Future<void> onDeleteRecording(String recordingId) =>
+  Future<bool> onDeleteRecording(String recordingId) =>
       _run(() => _deleteRecording(recordingId));
 
-  /// Clears an error after the View has shown it.
+  /// True while any action or play request is running (blocking rule).
+  bool get isBusy => actionState.value.isLoading || playState.value.isLoading;
+
+  /// Tapping a recording plays it, with the whole folder as the queue.
+  Future<void> onPlayRecording(String recordingId) =>
+      _play(() => _playRecording(recordingId));
+
+  Future<void> _play(Future<Result<void>> Function() action) async {
+    if (isBusy) return; // ignore re-entry
+    playState.value = const ViewStateLoading();
+    final result = await action();
+    playState.value = result.fold<ViewState<void>>(
+      (failure) => ViewStateError(failure),
+      (_) => const ViewStateLoaded(null),
+    );
+  }
+
+  /// Clears an error after the View has shown it, and the play request after
+  /// the player was opened.
   void onErrorShown() {
     if (actionState.value is ViewStateError) {
       actionState.value = const ViewStateIdle();
     }
   }
 
+  void onPlayHandled() {
+    if (!playState.value.isLoading) playState.value = const ViewStateIdle();
+  }
+
   // Rearranging.
 
   /// Starts rearranging a copy of the current list. Not available on Home.
   void onStartRearrange() {
-    if (isHome || isRearranging || actionState.value.isLoading) return;
+    if (isHome || isRearranging || isBusy) return;
     final current = state.value;
     if (current is! ViewStateLoaded<ListFolderItemsReturnModel>) return;
     rearrangeItems.value = List.of(current.data.items);
@@ -156,9 +205,9 @@ class FolderViewModel {
     rearrangeItems.value = null;
   }
 
-  Future<void> onSaveRearrange() async {
+  Future<bool> onSaveRearrange() async {
     final items = rearrangeItems.value;
-    if (items == null) return;
+    if (items == null) return false;
     final saved = await _run(
       () => _saveOrder([
         for (final item in items)
@@ -171,11 +220,12 @@ class FolderViewModel {
       ]),
     );
     if (saved) rearrangeItems.value = null;
+    return saved;
   }
 
   /// Runs one action under the blocking rule. Returns true when it succeeded.
   Future<bool> _run(Future<Result<void>> Function() action) async {
-    if (actionState.value.isLoading) return false; // ignore re-entry
+    if (isBusy) return false; // ignore re-entry
     actionState.value = const ViewStateLoading();
     final result = await action();
     actionState.value = result.fold<ViewState<void>>(
@@ -188,9 +238,12 @@ class FolderViewModel {
   void dispose() {
     _disposed = true;
     _subscription?.cancel(); // first, so no event arrives after dispose
+    _playerSubscription?.cancel();
+    playingRecordingId.dispose();
     state.dispose();
     pathState.dispose();
     actionState.dispose();
+    playState.dispose();
     rearrangeItems.dispose();
   }
 }

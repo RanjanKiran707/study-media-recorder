@@ -111,6 +111,37 @@
   .side { width: 56px; height: 56px; transition: opacity .3s, transform .15s var(--ease); }
   .side:disabled { opacity: .25; cursor: default; pointer-events: none; }
 
+
+  /* ---------- record: full-screen camera, controls on tap ---------- */
+  #record { padding-top: 0; --fg: #111; }
+  #record.vid { --fg: #fff; background: #000; }
+  #record .viewfinder { position: absolute; inset: 0; margin: 0; border-radius: 0; background: #f4f4f4; cursor: pointer; transition: background .3s; }
+  #record.vid .viewfinder { background: radial-gradient(circle at 50% 42%, #55687d 0, #2b3744 38%, #11161d 80%); }
+  #record.vid .viewfinder::after { content: ""; position: absolute; left: 50%; top: 46%; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; background: rgba(255,255,255,.05); }
+  #record .chrome { position: absolute; left: 0; right: 0; z-index: 2; display: flex; align-items: center; color: var(--fg);
+    transition: opacity .25s, transform .3s var(--ease); }
+  #record .chrome .ib { color: var(--fg); }
+  #record .chrome .ib:hover, #record .chrome .ib:active { background: rgba(127,127,127,.25); }
+  #record .chrome-top { top: 0; padding: 20px 12px 28px 8px; justify-content: space-between; gap: 8px; }
+  #record .chrome-bottom { bottom: 0; padding: 40px 0 30px; justify-content: center; gap: 36px; }
+  #record.vid .chrome-top { background: linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,0)); }
+  #record.vid .chrome-bottom { background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.6)); }
+  #record.chrome-off .chrome { opacity: 0; pointer-events: none; }
+  #record.chrome-off .chrome-top { transform: translateY(-14px); }
+  #record.chrome-off .chrome-bottom { transform: translateY(18px); }
+  #record .seg { margin: 0; border: 0; width: 176px; background: rgba(127,127,127,.22); border-radius: 999px; padding: 3px; }
+  #record .seg button { padding: 7px; font-size: 14px; color: inherit; opacity: .7; position: relative; z-index: 1; }
+  #record .seg button.on { opacity: 1; }
+  #record .seg .ind { top: 3px; bottom: 3px; left: 3px; width: calc(50% - 3px); height: auto; border-radius: 999px; background: rgba(255,255,255,.28); }
+  #record:not(.vid) .seg .ind { background: #fff; box-shadow: 0 1px 4px rgba(0,0,0,.12); }
+  #record .viewfinder .cam { top: 84px; left: 20px; color: var(--fg); opacity: .75; transition: opacity .25s; }
+  #record.vid .timer { position: absolute; top: 76px; left: 50%; transform: translateX(-50%); font-size: 15px; font-weight: 500; letter-spacing: 0;
+    background: rgba(0,0,0,.5); color: #fff; padding: 6px 14px; border-radius: 999px; white-space: nowrap; }
+  #record.vid .timer small { display: inline; margin: 0 0 0 8px; color: rgba(255,255,255,.75); }
+  #record.chrome-off .viewfinder .cam { opacity: 0; }
+  #record .rec-btn { background: transparent; border-color: var(--fg); }
+  #record .side svg { width: 28px; height: 28px; }
+
   /* ---------- save ---------- */
   .form { padding: 8px 20px; display: flex; flex-direction: column; gap: 24px; }
   .form > * { animation: rise .5s var(--ease) both; }
@@ -135,8 +166,8 @@
   .np.swap > * { animation: rise .4s var(--ease) both; }
   .seek { padding: 4px 28px 0; }
   input[type=range] { -webkit-appearance: none; appearance: none; width: 100%; height: 24px; background: transparent; cursor: pointer; display: block; }
-  input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, var(--text) var(--p, 0%), #e3e3e3 var(--p, 0%)); }
-  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--text); margin-top: -5.5px; transition: transform .18s var(--ease); }
+  input[type=range]::-webkit-slider-runnable-track { height: 3px; border-radius: 2px; background: linear-gradient(to right, var(--fg, var(--text)) var(--p, 0%), rgba(127,127,127,.35) var(--p, 0%)); }
+  input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: var(--fg, var(--text)); margin-top: -5.5px; transition: transform .18s var(--ease); }
   input[type=range]:active::-webkit-slider-thumb { transform: scale(1.5); }
   input[type=range]::-moz-range-track { height: 3px; border-radius: 2px; background: #e3e3e3; }
   input[type=range]::-moz-range-progress { height: 3px; border-radius: 2px; background: var(--text); }
@@ -151,6 +182,34 @@
   .transport .dim::after { content: ""; position: absolute; bottom: 4px; left: 50%; width: 4px; height: 4px; margin-left: -2px; border-radius: 50%; background: currentColor; transform: scale(0); transition: transform .25s var(--ease); }
   .transport .dim.on::after { transform: scale(1); }
   .queue { padding: 0 20px; overflow-y: auto; flex: 1; scrollbar-width: none; }
+
+
+  /* ---------- player: full-screen stage, controls on tap ---------- */
+  #player { padding-top: 0; --fg: #111; --inv: #fff; }
+  #player.vid { --fg: #fff; --inv: #111; background: #000; }
+  #player .stage { position: absolute; inset: 0; margin: 0; height: auto; border-radius: 0; cursor: pointer; background: #f4f4f4; transition: background .3s; }
+  #player.vid .stage { background: radial-gradient(circle at 50% 40%, #55687d 0, #2b3744 38%, #11161d 80%); }
+  #player.vid .stage::after { content: ""; position: absolute; left: 50%; top: 42%; width: 150px; height: 150px; margin: -75px 0 0 -75px; border-radius: 50%; background: rgba(255,255,255,.05); }
+  #player .chrome { position: absolute; left: 0; right: 0; z-index: 2; color: var(--fg); transition: opacity .25s, transform .3s var(--ease); }
+  #player .chrome .ib { color: var(--fg); }
+  #player .chrome .ib:hover, #player .chrome .ib:active { background: rgba(127,127,127,.25); }
+  #player .chrome-top { top: 0; display: flex; align-items: center; padding: 20px 12px 28px 8px; gap: 2px; }
+  #player .chrome-top h1 { flex: 1; font-size: 15px; font-weight: 500; opacity: .8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #player .chrome-bottom { bottom: 0; padding: 48px 0 24px; }
+  #player.vid .chrome-top { background: linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,0)); }
+  #player.vid .chrome-bottom { background: linear-gradient(rgba(0,0,0,0), rgba(0,0,0,.7)); }
+  #player.chrome-off .chrome { opacity: 0; pointer-events: none; }
+  #player.chrome-off .chrome-top { transform: translateY(-14px); }
+  #player.chrome-off .chrome-bottom { transform: translateY(18px); }
+  #player .np { padding: 0 28px 4px; }
+  #player .np .kind { color: var(--fg); opacity: .7; }
+  #player .np .title { font-size: 24px; min-height: 0; margin-bottom: 4px; }
+  #player .seek .times { color: var(--fg); opacity: .75; }
+  #player .transport .play { background: var(--fg); color: var(--inv); box-shadow: none; }
+  #player .transport .play:hover { background: var(--fg); }
+  #player .transport .dim { color: rgba(127,127,127,.7); }
+  #player .transport .dim.on { color: var(--fg); }
+  #player .bars i { background: var(--fg); }
 
   /* ---------- sheet & toast ---------- */
   .sheet-bg { position: absolute; inset: 0; display: flex; align-items: flex-end; z-index: 10; background: rgba(0,0,0,0); visibility: hidden;
@@ -194,6 +253,8 @@
     <symbol id="i-shuffle" viewBox="0 0 24 24"><path d="M3 7h3c5 0 6 10 12 10h3M18 14l3 3-3 3M3 17h3c1.5 0 2.7-.9 3.7-2.2M14.3 9.2C15.3 7.9 16.5 7 18 7h3M18 4l3 3-3 3"/></symbol>
     <symbol id="i-repeat" viewBox="0 0 24 24"><path d="M4 11V9a3 3 0 0 1 3-3h13M17 3l3 3-3 3M20 13v2a3 3 0 0 1-3 3H4M7 21l-3-3 3-3"/></symbol>
     <symbol id="i-down" viewBox="0 0 24 24"><path d="M5 9l7 7 7-7"/></symbol>
+    <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
+    <symbol id="i-list" viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></symbol>
     <symbol id="i-grip" viewBox="0 0 24 24"><path d="M5 9h14M5 15h14"/></symbol>
   </defs>
 </svg>
@@ -221,23 +282,25 @@
     <div class="main-action" id="folderAction"><button class="btn ghost" onclick="newFolder(cur)">New folder</button><button class="btn rec" onclick="openRecord()">Record here</button></div>
   </section>
 
-  <!-- RECORD -->
-  <section class="screen modal" id="record">
-    <div class="appbar has-back"><button class="ib" onclick="cancelRecord()"><svg><use href="#i-close"/></svg></button><h1>New recording</h1></div>
-    <div class="seg" id="modeSeg">
-      <button class="on" data-m="video" onclick="setMode('video')">Video</button>
-      <button data-m="audio" onclick="setMode('audio')">Audio</button>
-      <span class="ind" id="modeInd"></span>
-    </div>
-    <div class="viewfinder" id="vf">
+  <!-- RECORD: the camera fills the screen; tap it to show or hide the controls -->
+  <section class="screen modal vid" id="record">
+    <div class="viewfinder" id="vf" onclick="toggleChrome()">
       <div class="cam" id="camLabel">Back camera</div>
-      <button class="ib flip" id="flipBtn" title="Switch camera" onclick="flipCam()"><svg class="spin" id="flipIco"><use href="#i-flip"/></svg></button>
       <div class="timer" id="timer">00:00<small>Ready</small></div>
     </div>
-    <div class="controls">
+    <div class="chrome chrome-top" id="chromeTop">
+      <button class="ib" onclick="cancelRecord()"><svg><use href="#i-close"/></svg></button>
+      <div class="seg" id="modeSeg">
+        <button class="on" data-m="video" onclick="setMode('video')">Video</button>
+        <button data-m="audio" onclick="setMode('audio')">Audio</button>
+        <span class="ind" id="modeInd"></span>
+      </div>
+      <button class="ib flip" id="flipBtn" title="Switch camera" onclick="flipCam()"><svg class="spin" id="flipIco"><use href="#i-flip"/></svg></button>
+    </div>
+    <div class="chrome chrome-bottom" id="chromeBottom">
       <button class="ib side" id="pauseBtn" disabled onclick="togglePause()"><svg id="pauseIco"><use href="#i-pause"/></svg></button>
       <div class="rec-btn" id="recBtn" onclick="toggleRec()"><i></i></div>
-      <button class="btn ghost side" style="padding:0" id="doneBtn" disabled onclick="finishRec()">Done</button>
+      <button class="ib side" id="doneBtn" title="Done" disabled onclick="finishRec()"><svg><use href="#i-check"/></svg></button>
     </div>
   </section>
 
@@ -262,22 +325,26 @@
     <div class="main-action"><button class="btn" id="pkBtn" onclick="confirmMove()">Select this folder</button></div>
   </section>
 
-  <!-- PLAYER -->
-  <section class="screen modal" id="player">
-    <div class="appbar has-back"><button class="ib" onclick="closePlayer()"><svg><use href="#i-down"/></svg></button><h1 id="pFolder" style="font-size:15px;font-weight:500;color:var(--muted)"></h1>
-      <button class="ib" title="Stop and close" onclick="stopAndClose()"><svg><use href="#i-close"/></svg></button></div>
-    <div class="stage" id="stage"></div>
-    <div class="np" id="np"><div class="kind" id="pSub"></div><div class="title" id="pTitle"></div></div>
-    <div class="seek"><input type="range" id="seek" min="0" max="100" step="any" value="0" oninput="seekTo(this.value)">
-      <div class="times"><span id="tCur">0:00</span><span id="tDur">0:00</span></div></div>
-    <div class="transport">
-      <span style="width:40px"></span>
-      <button class="ib" onclick="skip(-1)"><svg><use href="#i-prev"/></svg></button>
-      <button class="ib play" id="playBtn" onclick="togglePlay()"><svg id="playIco"><use href="#i-play"/></svg></button>
-      <button class="ib" onclick="skip(1)"><svg><use href="#i-next"/></svg></button>
-      <button class="ib dim on" id="repBtn" title="Repeat all" onclick="toggleRepeat()"><svg><use href="#i-repeat"/></svg></button>
+  <!-- PLAYER: the stage fills the screen; tap it to show or hide the controls -->
+  <section class="screen modal vid" id="player">
+    <div class="stage" id="stage" onclick="togglePChrome()"></div>
+    <div class="chrome chrome-top" onpointerdown="pChrome(true)">
+      <button class="ib" title="Minimise" onclick="closePlayer()"><svg><use href="#i-down"/></svg></button>
+      <h1 id="pFolder"></h1>
+      <button class="ib" title="Stop and close" onclick="stopAndClose()"><svg><use href="#i-close"/></svg></button>
     </div>
-    <div class="queue" id="queue"></div>
+    <div class="chrome chrome-bottom" onpointerdown="pChrome(true)">
+      <div class="np" id="np"><div class="kind" id="pSub"></div><div class="title" id="pTitle"></div></div>
+      <div class="seek"><input type="range" id="seek" min="0" max="100" step="any" value="0" oninput="seekTo(this.value)">
+        <div class="times"><span id="tCur">0:00</span><span id="tDur">0:00</span></div></div>
+      <div class="transport">
+        <button class="ib" title="Up next" onclick="queueSheet()"><svg><use href="#i-list"/></svg></button>
+        <button class="ib" onclick="skip(-1)"><svg><use href="#i-prev"/></svg></button>
+        <button class="ib play" id="playBtn" onclick="togglePlay()"><svg id="playIco"><use href="#i-play"/></svg></button>
+        <button class="ib" onclick="skip(1)"><svg><use href="#i-next"/></svg></button>
+        <button class="ib dim on" id="repBtn" title="Repeat all" onclick="toggleRepeat()"><svg><use href="#i-repeat"/></svg></button>
+      </div>
+    </div>
   </section>
 
   <!-- mini player -->
@@ -297,9 +364,9 @@
   <p style="margin-bottom:10px"><button class="btn ghost" onclick="systemBack()">◁ Android back (or press Esc)</button></p>
   <ul>
     <li>Everything is clickable. Data is fake and resets on reload.</li>
-    <li><b>Folder:</b> Play folder starts the playlist. The sort icon (top right) turns on rearrange mode. Then drag the ☰ handle; it works with mouse and touch.</li>
-    <li><b>Record:</b> Video or Audio, flip camera, record, pause, Done.</li>
-    <li><b>Player:</b> a mini player stays at the bottom while you browse. Playback runs ~4× faster here so you can see it advance.</li>
+    <li><b>Folder:</b> tap a recording to play it; the whole folder becomes the queue. The sort icon (top right) turns on rearrange mode. Then drag the ☰ handle; it works with mouse and touch.</li>
+    <li><b>Record:</b> the camera fills the screen. Tap the picture to hide or show the controls. While recording they hide by themselves after 3 s. Audio keeps the controls on screen. Done is a tick.</li>
+    <li><b>Player:</b> the video fills the screen. Tap it to hide or show the controls (they hide after 3 s while a video plays). Audio keeps them on screen. The list icon opens Up next. A mini player stays at the bottom while you browse. Playback runs ~4× faster here so you can see it advance.</li>
   </ul>
 </div>
 
@@ -366,7 +433,7 @@ function show(name) {
   $('mini').classList.toggle('show', miniOn);
   $('phone').classList.toggle('has-mini', miniOn);
   document.querySelectorAll('.main-action').forEach(el => el.style.bottom = miniOn ? '74px' : '20px');
-  if (name === 'player') renderPlayer();
+  if (name === 'player') { renderPlayer(); pChrome(true); }
   if (name === 'save') setTimeout(() => $('saveTitle').focus(), 450);
 }
 function back() { if (reorder) { cancelReorder(); return; } const f = folders.find(x => x.id === cur); if (f && f.parent) openFolder(f.parent); else goHome(); }
@@ -400,7 +467,6 @@ function renderFolder(animate) {
   const list_ = items(cur), rs = inFolder(cur);
   if (reorder && draft) list_.sort((a, b) => draft.indexOf(a.o.id) - draft.indexOf(b.o.id));
   let h = '';
-  if (rs.length && !reorder) h += `<div class="actions"><button class="btn" onclick="playFolder('${cur}')">Play folder</button></div>`;
   if (reorder) h += `<div class="section" style="margin-top:8px">Drag to change the order</div>`;
   // subfolders and recordings share one list, no section headers
   h += list_.map(x => x.k === 'f' ? folderRow(x.o) : recRow(x.o)).join('');
@@ -582,14 +648,26 @@ function delRec(id) {
 
 /* ---------- record ---------- */
 function openRecord() { rec.target = cur; resetRec(); setMode('video'); show('record'); }
+/* Controls hide by themselves 3 s after a take starts (video only). A tap on the picture brings them back. */
+let chromeT = null;
+function chromeOn(autoHide) {
+  $('record').classList.remove('chrome-off'); clearTimeout(chromeT);
+  if (autoHide && rec.mode === 'video' && rec.state === 'recording') chromeT = setTimeout(() => $('record').classList.add('chrome-off'), 3000);
+}
+function toggleChrome() {
+  if (rec.mode !== 'video') return; // audio has nothing to look at, controls stay
+  if ($('record').classList.contains('chrome-off')) chromeOn(true);
+  else if (rec.state === 'recording') { clearTimeout(chromeT); $('record').classList.add('chrome-off'); }
+}
 function resetRec() {
   clearInterval(rec.timer); rec.state = 'idle'; rec.secs = 0;
   $('timer').innerHTML = '00:00<small>Ready</small>'; $('recBtn').classList.remove('on'); $('vf').classList.remove('live');
-  $('pauseBtn').disabled = true; $('doneBtn').disabled = true; $('modeSeg').style.pointerEvents = '';
+  $('pauseBtn').disabled = true; $('doneBtn').disabled = true; $('modeSeg').style.pointerEvents = ''; chromeOn(false);
   $('pauseIco').innerHTML = '<use href="#i-pause"/>';
 }
 function setMode(m) {
   rec.mode = m;
+  $('record').classList.toggle('vid', m === 'video'); chromeOn(false);
   document.querySelectorAll('#modeSeg button').forEach(b => b.classList.toggle('on', b.dataset.m === m));
   $('modeInd').style.transform = m === 'video' ? 'translateX(0)' : 'translateX(100%)';
   $('flipBtn').classList.toggle('hide', m !== 'video');
@@ -606,16 +684,16 @@ function toggleRec() {
     rec.state = 'recording'; rec.timer = setInterval(tick, 1000);
     $('recBtn').classList.add('on'); $('vf').classList.add('live');
     $('pauseBtn').disabled = false; $('doneBtn').disabled = false; $('modeSeg').style.pointerEvents = 'none';
-    showTime('Recording', true);
+    showTime('Recording', true); chromeOn(true);
   } else finishRec();
 }
 function togglePause() {
-  if (rec.state === 'recording') { rec.state = 'paused'; $('pauseIco').innerHTML = '<use href="#i-play"/>'; $('vf').classList.remove('live'); showTime('Paused', false); }
-  else if (rec.state === 'paused') { rec.state = 'recording'; $('pauseIco').innerHTML = '<use href="#i-pause"/>'; $('vf').classList.add('live'); showTime('Recording', true); }
+  if (rec.state === 'recording') { rec.state = 'paused'; $('pauseIco').innerHTML = '<use href="#i-play"/>'; $('vf').classList.remove('live'); showTime('Paused', false); chromeOn(false); }
+  else if (rec.state === 'paused') { rec.state = 'recording'; $('pauseIco').innerHTML = '<use href="#i-pause"/>'; $('vf').classList.add('live'); showTime('Recording', true); chromeOn(true); }
 }
 function finishRec() {
   if (rec.state === 'idle') return;
-  clearInterval(rec.timer); if (rec.secs < 1) rec.secs = 1;
+  clearInterval(rec.timer); clearTimeout(chromeT); if (rec.secs < 1) rec.secs = 1;
   $('saveSummary').textContent = kindLabel(rec.mode) + ' · ' + fmt(rec.secs) + ' · Saving to ' + path(rec.target);
   $('saveTitle').value = '';
   show('save');
@@ -636,11 +714,6 @@ function saveRec() {
 }
 
 /* ---------- player ---------- */
-function playFolder(id) {
-  const list = inFolder(id).slice(); if (!list.length) return;
-  pl.folder = id;
-  pl.list = list; pl.i = 0; startPlay(); show('player');
-}
 function playOne(id) {
   const r = recs.find(x => x.id === id);
   pl.folder = r.folder; pl.list = inFolder(r.folder); pl.i = pl.list.findIndex(x => x.id === id); startPlay(); show('player');
@@ -671,7 +744,8 @@ function renderPlayer() {
   $('pFolder').textContent = path(pl.folder);
   $('pSub').textContent = kindLabel(r.type) + ' · ' + (pl.i + 1) + ' of ' + pl.list.length;
   $('pTitle').textContent = r.title;
-  $('stage').innerHTML = r.type === 'audio' ? '<div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>' : 'Video';
+  $('player').classList.toggle('vid', r.type === 'video');
+  $('stage').innerHTML = r.type === 'audio' ? '<div class="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>' : '';
   $('stage').classList.toggle('playing-now', pl.playing);
   if (pl.lastId !== r.id) {
     pl.lastId = r.id;
@@ -681,11 +755,25 @@ function renderPlayer() {
   $('playIco').innerHTML = pi; $('mIco').innerHTML = pi;
   $('mTitle').textContent = r.title; $('mSub').textContent = path(pl.folder) + ' · ' + (pl.i + 1) + '/' + pl.list.length;
   $('repBtn').classList.toggle('on', pl.repeat);
-  setHTML($('queue'), '<div class="section" style="margin-top:12px">Up next</div>' + pl.list.map((x, k) =>
-    `<div class="row ${k === pl.i ? 'playing' : ''}" onclick="pl.i=${k};startPlay()"><div class="meta"><div class="t">${esc(x.title)}</div><div class="s">${kindLabel(x.type)} · ${fmt(x.dur)}</div></div></div>`).join(''));
   renderProgress(); markPlaying();
 }
-function togglePlay() { pl.playing = !pl.playing; renderPlayer(); }
+/* Controls hide by themselves 3 s after the last touch while a video plays. Audio keeps them on screen. */
+let pChromeT = null;
+function pChrome(autoHide) {
+  $('player').classList.remove('chrome-off'); clearTimeout(pChromeT);
+  const r = pl.list[pl.i];
+  if (autoHide && r && r.type === 'video' && pl.playing) pChromeT = setTimeout(() => $('player').classList.add('chrome-off'), 3000);
+}
+function togglePChrome() {
+  const r = pl.list[pl.i]; if (!r || r.type !== 'video') return;
+  if ($('player').classList.contains('chrome-off')) pChrome(true);
+  else if (pl.playing) { clearTimeout(pChromeT); $('player').classList.add('chrome-off'); }
+}
+function queueSheet() {
+  openSheet('<h3>Up next</h3>' + pl.list.map((x, k) =>
+    `<div class="row ${k === pl.i ? 'playing' : ''}" onclick="pl.i=${k};startPlay();closeSheet();pChrome(true)"><div class="meta"><div class="t">${esc(x.title)}</div><div class="s">${kindLabel(x.type)} · ${fmt(x.dur)}</div></div></div>`).join(''));
+}
+function togglePlay() { pl.playing = !pl.playing; renderPlayer(); pChrome(true); }
 function skip(d) { pl.i = (pl.i + d + pl.list.length) % pl.list.length; pl.pos = 0; renderPlayer(); }
 function seekTo(v) { pl.pos = +v; renderProgress(); }
 function toggleRepeat() { pl.repeat = !pl.repeat; renderPlayer(); }

@@ -42,8 +42,11 @@ There are three phases: **Data**, **Use cases** and **Features**.
 ## 4. Phase 3: Features
 
 - **Build:** one feature at a time (View and ViewModel), using the checklist in section 10 of `flutter_arch_general.md`. The order of the features comes from the product spec, and is agreed with the user before the phase starts.
-- **Tests:** **ViewModel unit tests only**, with fake use cases. Check the `Idle -> Loading -> Loaded/Error` sequence, that a second call during `Loading` is ignored, and that stream subscriptions are cancelled in `dispose()`. There are **no widget tests and no integration tests for now**. The View is checked by running the app.
-- **Done when (per feature):** the ViewModel tests pass, the whole suite passes, and the feature works in the app on a device or emulator.
+- **Tests:** three kinds, written together with the feature (section 9 of `flutter_arch_general.md`).
+  - **ViewModel unit tests**, with fake use cases or real use cases on fake repositories. Check the `Idle -> Loading -> Loaded/Error` sequence, that a second call during `Loading` is ignored, and that stream subscriptions are cancelled in `dispose()`.
+  - **Widget tests** for every View, in `test/features/<feature>/`. Check that the loaded, empty and error states render, that controls are disabled and back is blocked while `Loading`, and that taps reach the ViewModel. Dependencies come from `AppDependencies.instance`, built with fakes.
+  - **Integration tests** for the key journeys, in `integration_test/`. They start the real app widgets with the real database (in a temporary location) and fake hardware (recorder and player), because the camera, microphone and speaker cannot be driven by a test. Run with `flutter test integration_test` (host) or `flutter test integration_test -d <device>`.
+- **Done when (per feature):** its ViewModel and widget tests pass, the whole suite passes, and the feature works in the app on a device or emulator. The integration tests pass at the end of the phase.
 - **Progress file:** `docs/progress/features_progress.md`, with one section per feature.
 
 ---
@@ -97,4 +100,4 @@ Rules:
 
 ## 7. Later additions
 
-An optional Phase 4 (widget tests and integration tests for key journeys) can be added when the user asks for it. It is left out for now.
+Widget and integration tests were first left out, and added to the Features phase on 2026-10-11 at the user's request. Hardware (camera, microphone, audio and video players) is always behind a repository interface, so tests use fakes for it.

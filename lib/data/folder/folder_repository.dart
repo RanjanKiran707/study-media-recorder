@@ -135,9 +135,15 @@ class FolderRepository implements FolderRepositoryInterface {
   @override
   Stream<Result<Map<String, FolderCounts>>> watchFolderCounts() {
     final query = _db.customSelect(
+      'WITH RECURSIVE tree(root, id) AS ('
+      'SELECT id, id FROM folder '
+      'UNION ALL '
+      'SELECT tree.root, f.id FROM folder f JOIN tree ON f.parent_id = tree.id'
+      ') '
       'SELECT f.id AS id, '
       '(SELECT COUNT(*) FROM folder c WHERE c.parent_id = f.id) AS subfolders, '
-      '(SELECT COUNT(*) FROM recording r WHERE r.folder_id = f.id) AS recordings '
+      '(SELECT COUNT(*) FROM recording r WHERE r.folder_id IN '
+      '(SELECT id FROM tree WHERE root = f.id)) AS recordings '
       'FROM folder f',
       readsFrom: {_db.folderTable, _db.recordingTable},
     );

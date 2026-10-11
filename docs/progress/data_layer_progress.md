@@ -1,7 +1,7 @@
 # Data layer progress
 
 Status: Done (approved by the user)
-Last updated: 2026-10-11
+Last updated: 2026-10-11 (recursive counts, recorder and player added)
 
 ## Checklist
 | Item | Code | Tests |
@@ -20,6 +20,8 @@ Newest first.
 
 | Date | Change | Why |
 |---|---|---|
+| 2026-10-11 | Recorder and player added in `data/recorder/` and `data/player/` (interfaces and implementations on `camera`, `record`, `just_audio`, `video_player`, `wakelock_plus`). `PlayerStateModel` starts with repeat all on. Device code, so covered by fakes in tests and by running the app | Needed by the Record and Player features |
+| 2026-10-11 | `watchFolderCounts` counts recordings recursively (SQL `WITH RECURSIVE`); subfolders stay the direct children | The mockup shows "4 recordings · 1 subfolder" for the whole tree |
 | 2026-10-11 | `FolderRepository.watchFolderCounts()` and `FolderCounts` added, with 2 tests | The Use cases phase needs live subfolder and recording counts for the folder tiles ("4 recordings · 1 subfolder"). One query for all folders keeps the tiles up to date when a recording is added, moved or deleted |
 | 2026-10-11 | Tests moved into `test/data/folder/`, `test/data/recording/`, `test/data/database/` and `test/core/errors/` | `flutter_development_process.md` says tests mirror `lib/` |
 | 2026-10-11 | `toResultStream` rewritten without `async*` | The first version kept the database query running after the subscription was cancelled, which would leak when a ViewModel is disposed. A test now checks that cancelling cancels the source |

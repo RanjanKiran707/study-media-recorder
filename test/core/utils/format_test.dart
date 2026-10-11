@@ -9,7 +9,14 @@ void main() {
   });
 
   test('formatDate', () {
-    expect(formatDate(DateTime(2026, 10, 11)), '11 Oct 2026');
+    final now = DateTime(2026, 10, 11);
+    expect(formatDate(DateTime(2026, 10, 6), now: now), 'Oct 6');
+    expect(formatDate(DateTime(2025, 10, 6), now: now), 'Oct 6, 2025');
+  });
+
+  test('formatClock', () {
+    expect(formatClock(Duration.zero), '00:00');
+    expect(formatClock(const Duration(seconds: 125)), '02:05');
   });
 
   test('formatCounts', () {

@@ -10,6 +10,11 @@ String messageFor(Failure failure) {
     'folder_not_found' => 'That folder no longer exists.',
     'recording_not_found' => 'That recording no longer exists.',
     'same_folder' => 'The recording is already in that folder.',
+    'permission_denied' =>
+      'Permission was denied. Allow camera and microphone access in Settings.',
+    'camera_unavailable' => 'No camera was found on this device.',
+    'nothing_recorded' => 'Nothing was recorded. Please try again.',
+    'playlist_empty' => 'This folder has no recordings to play.',
     'duplicate_items' => 'The order could not be saved.',
     _ => switch (failure) {
       StorageFailure() => 'Could not read or save your data. Please try again.',

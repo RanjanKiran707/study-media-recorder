@@ -1,5 +1,6 @@
 package com.example.study_recorder
 
-import io.flutter.embedding.android.FlutterActivity
+import com.ryanheise.audioservice.AudioServiceActivity
 
-class MainActivity : FlutterActivity()
+// AudioServiceActivity lets just_audio_background play with the screen off.
+class MainActivity : AudioServiceActivity()

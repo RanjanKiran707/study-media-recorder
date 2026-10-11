@@ -7,9 +7,11 @@ import 'package:study_recorder/features/folder/folder_view_model.dart';
 
 import '../../domain/fakes/fake_folder_repository.dart';
 import '../../domain/fakes/fake_recording_repository.dart';
+import '../../domain/fakes/test_env.dart';
 import '../../domain/fakes/test_models.dart';
 
 void main() {
+  late TestEnv env;
   late FakeFolderRepository folders;
   late FakeRecordingRepository recordings;
   late AppDependencies deps;
@@ -24,24 +26,27 @@ void main() {
       renameRecording: deps.renameRecording,
       deleteRecording: deps.deleteRecording,
       saveOrder: deps.saveOrder,
+      playRecording: deps.playRecording,
       getFolderPath: deps.getFolderPath,
       listFolderItems: deps.listFolderItems,
+      watchPlayer: deps.watchPlayer,
       newId: () => 'new-id',
     );
   }
 
   setUp(() {
-    folders = FakeFolderRepository()
+    env = TestEnv();
+    folders = env.folders
       ..folders.addAll([
         folderOf('physics', name: 'Physics'),
         folderOf('mechanics', name: 'Mechanics', parentId: 'physics'),
       ]);
-    recordings = FakeRecordingRepository()
+    recordings = env.recordings
       ..recordings.addAll([
         recordingOf('r1', 'physics', createdAt: 20),
         recordingOf('r2', 'physics', createdAt: 30),
       ]);
-    deps = AppDependencies.fromRepositories(folders, recordings);
+    deps = env.deps;
   });
 
   tearDown(() => vm.dispose());
@@ -287,6 +292,55 @@ void main() {
         'r1',
         'r2',
       ]);
+    });
+  });
+
+  group('playing', () {
+    setUp(() async {
+      vm = build('physics');
+      await pumpEventQueue();
+    });
+
+    test('tapping a recording: Loading, then Loaded', () async {
+      final seen = <ViewState<void>>[];
+      vm.playState.addListener(() => seen.add(vm.playState.value));
+
+      await vm.onPlayRecording('r1');
+
+      expect(seen.first, isA<ViewStateLoading>());
+      expect(vm.playState.value, isA<ViewStateLoaded>());
+    });
+
+    test('tapping a recording plays it with the folder as the queue', () async {
+      await vm.onPlayRecording('r2');
+
+      expect(env.player.state.queue.map((t) => t.recordingId), ['r1', 'r2']);
+      expect(env.player.state.current!.recordingId, 'r2');
+      expect(vm.playState.value, isA<ViewStateLoaded>());
+    });
+
+    test('a second play while one is starting is ignored', () async {
+      await Future.wait([vm.onPlayRecording('r1'), vm.onPlayRecording('r2')]);
+
+      expect(env.player.calls, ['start']);
+    });
+
+    test('marks the recording that is playing', () async {
+      await vm.onPlayRecording('r1');
+      await pumpEventQueue();
+      expect(vm.playingRecordingId.value, 'r1');
+
+      await env.deps.pausePlayer();
+      await pumpEventQueue();
+      expect(vm.playingRecordingId.value, isNull);
+    });
+
+    test('onPlayHandled returns to Idle', () async {
+      await vm.onPlayRecording('r1');
+
+      vm.onPlayHandled();
+
+      expect(vm.playState.value, isA<ViewStateIdle>());
     });
   });
 }

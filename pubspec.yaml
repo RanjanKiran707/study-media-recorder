@@ -1,5 +1,5 @@
 name: study_recorder
-description: "A new Flutter project."
+description: "Study Recorder: record short audio or video explanations, keep them in folders and play a folder for revision."
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
@@ -43,7 +43,6 @@ dependencies:
   just_audio: ^0.10.6
   just_audio_background: ^0.0.1-beta.17
   video_player: ^2.10.1
-  permission_handler: ^13.0.2
   uuid: ^4.6.0
   wakelock_plus: ^1.4.0
 

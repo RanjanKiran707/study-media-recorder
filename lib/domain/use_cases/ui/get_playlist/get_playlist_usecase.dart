@@ -4,7 +4,7 @@ import 'package:study_recorder/data/folder/folder_repository_interface.dart';
 import 'package:study_recorder/data/recording/recording_repository_interface.dart';
 import 'package:study_recorder/domain/use_cases/ui/get_playlist/get_playlist_return_model.dart';
 
-/// The playlist of "Play folder": the recordings of one folder, in order.
+/// The playlist of a folder: its recordings, in the order shown in the list.
 /// A snapshot taken when playing starts. It is not kept up to date.
 class GetPlaylistUsecase {
   final FolderRepositoryInterface _folders;
@@ -31,6 +31,7 @@ class GetPlaylistUsecase {
           for (final r in list)
             PlayableItem(
               recordingId: r.id,
+              folderId: folderId,
               title: r.title,
               folderName: folderName,
               type: r.type,

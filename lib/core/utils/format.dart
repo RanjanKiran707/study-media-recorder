@@ -24,9 +24,20 @@ const _months = [
   'Dec',
 ];
 
-/// "11 Oct 2026".
-String formatDate(DateTime date) =>
-    '${date.day} ${_months[date.month - 1]} ${date.year}';
+/// "Oct 6", or "Oct 6, 2025" when it is not this year.
+String formatDate(DateTime date, {DateTime? now}) {
+  final today = now ?? DateTime.now();
+  final text = '${_months[date.month - 1]} ${date.day}';
+  return date.year == today.year ? text : '$text, ${date.year}';
+}
+
+/// "02:05", the running timer on the Record screen.
+String formatClock(Duration duration) {
+  final total = duration.inSeconds;
+  final mm = (total ~/ 60).toString().padLeft(2, '0');
+  final ss = (total % 60).toString().padLeft(2, '0');
+  return '$mm:$ss';
+}
 
 /// "4 recordings · 1 subfolder", or "Empty".
 String formatCounts({required int subfolders, required int recordings}) {

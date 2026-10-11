@@ -12,6 +12,10 @@ class FakeFolderRepository implements FolderRepositoryInterface {
   Map<String, FolderCounts> counts = {};
   Failure? failure;
 
+  /// When set, createFolder waits for it. Lets a test hold an action in
+  /// Loading.
+  Completer<void>? gate;
+
   final List<FolderModel> created = [];
   final Map<String, String> renamed = {};
   final List<String> deleted = [];
@@ -23,20 +27,18 @@ class FakeFolderRepository implements FolderRepositoryInterface {
   void notify() => _changes.add(null);
 
   Stream<T> _watch<T>(T Function() read) {
-    late final StreamController<T> controller;
-    StreamSubscription<void>? sub;
-    controller = StreamController<T>(
-      onListen: () {
-        controller.add(read());
-        sub = _changes.stream.listen((_) => controller.add(read()));
-      },
-      onCancel: () => sub?.cancel(),
-    );
-    return controller.stream;
+    return Stream.multi((controller) {
+      controller.add(read());
+      final sub = _changes.stream.listen((_) => controller.add(read()));
+      controller.onCancel = () {
+        sub.cancel();
+      };
+    });
   }
 
   @override
   Future<Result<void>> createFolder(FolderModel folder) async {
+    await gate?.future;
     if (failure != null) return Err(failure!);
     created.add(folder);
     folders.add(folder);

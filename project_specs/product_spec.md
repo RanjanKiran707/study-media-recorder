@@ -12,7 +12,7 @@ Android app, built with Flutter. Single user. Works fully offline. No account or
 
 ## Screens
 - **Home** ("Study Recorder"): the top-level folders, and a New folder button.
-- **Folder**: one list holding the subfolders and recordings together, with no section headings. Buttons: **New folder** and **Record here**. Play folder starts the playlist.
+- **Folder**: one list holding the subfolders and recordings together, with no section headings. Buttons: **New folder** and **Record here**. Tapping a recording plays it with the whole folder as the queue.
 - **Record**, **Save**, **Move to** (folder picker) and **Player** open on top of the folder screen.
 
 ## Features
@@ -42,7 +42,7 @@ Android app, built with Flutter. Single user. Works fully offline. No account or
 
 ### 5. Playback
 - Play a single recording (video player for video, audio player for audio).
-- **Play folder** plays the folder's recordings one after another, in the order shown in the list. Subfolders are skipped.
+- **Tapping a recording** plays it and queues the whole folder: the recordings play one after another, in the order shown in the list, starting from the one tapped. Subfolders are skipped. There is no separate Play folder button.
 - Full-screen player controls: play/pause, next, previous, seek, repeat all.
 - A **✕ button** in the full-screen player stops playback and closes it.
 - Minimising the player (or pressing back) leaves a **mini player** at the bottom of the folder and home screens. The mini player shows the title and folder, a play/pause button, a thin progress line and a **✕ button** that stops playback. It has no next or previous buttons. Tapping it reopens the full-screen player.

@@ -1,6 +1,9 @@
-/// How many direct children a folder has.
+/// What a folder holds: direct subfolders and all recordings inside it.
 class FolderCounts {
+  /// Direct subfolders only.
   final int subfolders;
+
+  /// All recordings inside, including those in nested subfolders.
   final int recordings;
 
   const FolderCounts({required this.subfolders, required this.recordings});

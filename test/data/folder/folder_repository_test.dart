@@ -154,22 +154,25 @@ void main() {
   });
 
   group('watchFolderCounts', () {
-    test('counts direct subfolders and recordings only', () async {
-      await env.addFolder('physics');
-      await env.addFolder('mechanics', parentId: 'physics');
-      await env.addFolder('optics', parentId: 'physics');
-      await env.addRecording('r1', 'physics');
-      await env.addRecording('r2', 'mechanics');
+    test(
+      'counts direct subfolders, and all recordings including nested ones',
+      () async {
+        await env.addFolder('physics');
+        await env.addFolder('mechanics', parentId: 'physics');
+        await env.addFolder('optics', parentId: 'physics');
+        await env.addRecording('r1', 'physics');
+        await env.addRecording('r2', 'mechanics');
 
-      final result = await env.folders.watchFolderCounts().first;
-      final counts = (result as Ok<Map<String, FolderCounts>>).value;
+        final result = await env.folders.watchFolderCounts().first;
+        final counts = (result as Ok<Map<String, FolderCounts>>).value;
 
-      expect(counts['physics']!.subfolders, 2);
-      expect(counts['physics']!.recordings, 1);
-      expect(counts['mechanics']!.subfolders, 0);
-      expect(counts['mechanics']!.recordings, 1);
-      expect(counts['optics']!.recordings, 0);
-    });
+        expect(counts['physics']!.subfolders, 2);
+        expect(counts['physics']!.recordings, 2); // r1 and r2 in mechanics
+        expect(counts['mechanics']!.subfolders, 0);
+        expect(counts['mechanics']!.recordings, 1);
+        expect(counts['optics']!.recordings, 0);
+      },
+    );
 
     test('emits again when a recording is added', () async {
       await env.addFolder('f');

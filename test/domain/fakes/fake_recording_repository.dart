@@ -12,6 +12,9 @@ class FakeRecordingRepository implements RecordingRepositoryInterface {
   final List<RecordingModel> recordings = [];
   Failure? failure;
 
+  /// When set, addRecording waits for it. Lets a test hold a save in Loading.
+  Completer<void>? gate;
+
   final List<RecordingModel> added = [];
   final Map<String, String> renamed = {};
   final Map<String, String> moved = {};
@@ -33,6 +36,7 @@ class FakeRecordingRepository implements RecordingRepositoryInterface {
     required int durationMs,
     required DateTime createdAt,
   }) async {
+    await gate?.future;
     if (failure != null) return Err(failure!);
     final model = RecordingModel(
       id: id,
@@ -81,21 +85,18 @@ class FakeRecordingRepository implements RecordingRepositoryInterface {
 
   @override
   Stream<Result<List<RecordingModel>>> watchRecordings(String folderId) {
-    late final StreamController<Result<List<RecordingModel>>> controller;
-    StreamSubscription<void>? sub;
     Result<List<RecordingModel>> read() {
       if (failure != null) return Err(failure!);
       return Ok(recordings.where((r) => r.folderId == folderId).toList());
     }
 
-    controller = StreamController<Result<List<RecordingModel>>>(
-      onListen: () {
-        controller.add(read());
-        sub = _changes.stream.listen((_) => controller.add(read()));
-      },
-      onCancel: () => sub?.cancel(),
-    );
-    return controller.stream;
+    return Stream.multi((controller) {
+      controller.add(read());
+      final sub = _changes.stream.listen((_) => controller.add(read()));
+      controller.onCancel = () {
+        sub.cancel();
+      };
+    });
   }
 
   @override
