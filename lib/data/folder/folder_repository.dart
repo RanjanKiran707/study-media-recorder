@@ -132,6 +132,28 @@ class FolderRepository implements FolderRepositoryInterface {
     }
   }
 
+  @override
+  Stream<Result<Map<String, FolderCounts>>> watchFolderCounts() {
+    final query = _db.customSelect(
+      'SELECT f.id AS id, '
+      '(SELECT COUNT(*) FROM folder c WHERE c.parent_id = f.id) AS subfolders, '
+      '(SELECT COUNT(*) FROM recording r WHERE r.folder_id = f.id) AS recordings '
+      'FROM folder f',
+      readsFrom: {_db.folderTable, _db.recordingTable},
+    );
+    return toResultStream(
+      query.watch().map(
+        (rows) => {
+          for (final row in rows)
+            row.read<String>('id'): FolderCounts(
+              subfolders: row.read<int>('subfolders'),
+              recordings: row.read<int>('recordings'),
+            ),
+        },
+      ),
+    );
+  }
+
   FolderModel _toModel(FolderRow row) => FolderModel(
     id: row.id,
     parentId: row.parentId,

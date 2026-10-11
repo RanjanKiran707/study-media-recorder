@@ -13,13 +13,14 @@ Last updated: 2026-10-11
 | Recording: model, interface, `RecordingRepository` | [x] | [x] |
 
 ## Test status
-Passing, 32 tests (31 for the data layer and core, plus the default `widget_test.dart` from `flutter create`, which is replaced in the Features phase), 2026-10-11
+Passing, 34 data layer and core tests (the full suite is 88 tests, see `use_cases_progress.md`), 2026-10-11
 
 ## Change log
 Newest first.
 
 | Date | Change | Why |
 |---|---|---|
+| 2026-10-11 | `FolderRepository.watchFolderCounts()` and `FolderCounts` added, with 2 tests | The Use cases phase needs live subfolder and recording counts for the folder tiles ("4 recordings · 1 subfolder"). One query for all folders keeps the tiles up to date when a recording is added, moved or deleted |
 | 2026-10-11 | Tests moved into `test/data/folder/`, `test/data/recording/`, `test/data/database/` and `test/core/errors/` | `flutter_development_process.md` says tests mirror `lib/` |
 | 2026-10-11 | `toResultStream` rewritten without `async*` | The first version kept the database query running after the subscription was cancelled, which would leak when a ViewModel is disposed. A test now checks that cancelling cancels the source |
 | 2026-10-11 | `moveRecording` clears `sort_index` | A moved recording is a new item in the other folder, so it must not keep a position from the old folder. It is placed by created time, which may not be the end of the list |

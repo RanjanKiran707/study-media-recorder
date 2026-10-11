@@ -17,6 +17,10 @@ abstract interface class FolderRepositoryInterface {
   /// (nulls last), then created time. Emits again whenever they change.
   Stream<Result<List<FolderModel>>> watchFolders(String? parentId);
 
+  /// Direct subfolder and recording counts of every folder, by folder id.
+  /// Emits again whenever a folder or a recording is added, moved or deleted.
+  Stream<Result<Map<String, FolderCounts>>> watchFolderCounts();
+
   /// Sets the sort index of the given folders (id -> index).
   Future<Result<void>> updateSortOrder(Map<String, int> sortIndexById);
 }

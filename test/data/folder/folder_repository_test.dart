@@ -153,6 +153,43 @@ void main() {
     });
   });
 
+  group('watchFolderCounts', () {
+    test('counts direct subfolders and recordings only', () async {
+      await env.addFolder('physics');
+      await env.addFolder('mechanics', parentId: 'physics');
+      await env.addFolder('optics', parentId: 'physics');
+      await env.addRecording('r1', 'physics');
+      await env.addRecording('r2', 'mechanics');
+
+      final result = await env.folders.watchFolderCounts().first;
+      final counts = (result as Ok<Map<String, FolderCounts>>).value;
+
+      expect(counts['physics']!.subfolders, 2);
+      expect(counts['physics']!.recordings, 1);
+      expect(counts['mechanics']!.subfolders, 0);
+      expect(counts['mechanics']!.recordings, 1);
+      expect(counts['optics']!.recordings, 0);
+    });
+
+    test('emits again when a recording is added', () async {
+      await env.addFolder('f');
+      final emissions = <int>[];
+      final sub = env.folders.watchFolderCounts().listen((r) {
+        emissions.add(
+          (r as Ok<Map<String, FolderCounts>>).value['f']!.recordings,
+        );
+      });
+
+      await pumpEventQueue();
+      await env.addRecording('r1', 'f');
+      await pumpEventQueue();
+      await sub.cancel();
+
+      expect(emissions.first, 0);
+      expect(emissions.last, 1);
+    });
+  });
+
   group('storage errors', () {
     test('one-shot calls return Err instead of throwing', () async {
       await env.db.customStatement('DROP TABLE recording');

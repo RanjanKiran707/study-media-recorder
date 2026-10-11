@@ -1,3 +1,11 @@
+/// How many direct children a folder has.
+class FolderCounts {
+  final int subfolders;
+  final int recordings;
+
+  const FolderCounts({required this.subfolders, required this.recordings});
+}
+
 class FolderModel {
   final String id;
 
