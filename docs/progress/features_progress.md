@@ -57,4 +57,4 @@ Newest first.
 - Front-camera videos play back mirrored compared with the preview (the preview is a mirror, the file is not). A flip of the preview was tried and reverted at the user's request. Open.
 - Background audio with the screen off and the notification are unverified.
 - The other five integration journeys have not been run. Run `flutter test integration_test -d <device>`.
-- The Android package id is still `com.example.study_recorder`. Change it before any release.
+- The Android package id is `com.ranjan.study_recorder` (changed from the `com.example` placeholder, 2026-10-11). The old debug build on a phone is a different app: uninstall it.

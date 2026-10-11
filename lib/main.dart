@@ -10,7 +10,7 @@ Future<void> main() async {
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
   // Lets audio keep playing with the screen off, with a notification.
   await JustAudioBackground.init(
-    androidNotificationChannelId: 'com.example.study_recorder.playback',
+    androidNotificationChannelId: 'com.ranjan.study_recorder.playback',
     androidNotificationChannelName: 'Study Recorder playback',
     androidNotificationOngoing: true,
   );

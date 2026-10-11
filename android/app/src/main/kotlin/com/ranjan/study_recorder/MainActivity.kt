@@ -1,4 +1,4 @@
-package com.example.study_recorder
+package com.ranjan.study_recorder
 
 import com.ryanheise.audioservice.AudioServiceActivity
 
