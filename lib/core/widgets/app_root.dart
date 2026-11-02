@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:study_recorder/core/widgets/app_route.dart';
 import 'package:study_recorder/core/widgets/app_theme.dart';
+import 'package:study_recorder/core/widgets/web_showcase_shell.dart';
 
 /// The app shell, with no Material or Cupertino app. Tests use it too.
 class AppRoot extends StatelessWidget {
@@ -19,17 +20,8 @@ class AppRoot extends StatelessWidget {
           appRoute<T>(builder, settings: settings),
       builder: (context, child) => DefaultTextStyle(
         style: AppText.base,
-        child: ColoredBox(
-          color: const Color(0xFFE9E9E9),
-          child: Center(
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 480),
-              child: ColoredBox(
-                color: AppColors.background,
-                child: child ?? const SizedBox.shrink(),
-              ),
-            ),
-          ),
+        child: WebShowcaseShell(
+          child: child ?? const SizedBox.shrink(),
         ),
       ),
     );
