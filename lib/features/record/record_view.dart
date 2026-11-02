@@ -301,7 +301,7 @@ class _RecordViewState extends State<RecordView> {
             children: [
               if (isVideo)
                 Positioned.fill(
-                  child: ctrl.buildPreview() ?? const SizedBox.shrink(),
+                  child: IgnorePointer(child: ctrl.buildPreview() ?? const SizedBox.shrink()),
                 ),
               if (isVideo)
                 Positioned(
@@ -310,7 +310,7 @@ class _RecordViewState extends State<RecordView> {
                   right: 0,
                   child: Align(
                     alignment: Alignment.topCenter,
-                    child: _timerPill(session),
+                    child: IgnorePointer(child: _timerPill(session)),
                   ),
                 )
               else

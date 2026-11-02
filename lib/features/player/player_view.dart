@@ -239,7 +239,7 @@ class _PlayerViewState extends State<PlayerView> {
       );
     }
     if (data.type == RecordingType.video) {
-      return Center(child: ctrl.buildVideo() ?? const SizedBox.shrink());
+      return Center(child: IgnorePointer(child: ctrl.buildVideo() ?? const SizedBox.shrink()));
     }
     return Center(child: AppEqualizer(active: data.playing));
   }

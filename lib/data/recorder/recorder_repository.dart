@@ -33,7 +33,7 @@ class RecorderRepository implements RecorderRepositoryInterface {
           return const SizedBox.shrink();
         }
         final size = camera.value.previewSize;
-        if (size == null) return CameraPreview(camera);
+        if (size == null) return IgnorePointer(child: CameraPreview(camera));
         // Fill the viewfinder (crop the overflow) instead of letterboxing.
         final portrait =
             MediaQuery.orientationOf(context) == Orientation.portrait;
@@ -45,7 +45,9 @@ class RecorderRepository implements RecorderRepositoryInterface {
             child: SizedBox(
               width: portrait ? short : long,
               height: portrait ? long : short,
-              child: CameraPreview(camera),
+              child: IgnorePointer(
+                child: CameraPreview(camera),
+              ),
             ),
           ),
         );

@@ -75,7 +75,7 @@ class PlayerRepository implements PlayerRepositoryInterface {
     }
     return AspectRatio(
       aspectRatio: video.value.aspectRatio,
-      child: VideoPlayer(video),
+      child: IgnorePointer(child: VideoPlayer(video)),
     );
   }
 
