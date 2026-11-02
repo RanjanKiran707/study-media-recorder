@@ -1,12 +1,9 @@
-import 'dart:io';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/widgets.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:study_recorder/core/errors/failure.dart';
 import 'package:study_recorder/core/errors/result.dart';
+import 'package:study_recorder/core/storage/file_utils.dart';
 import 'package:study_recorder/data/recorder/recorder_repository_interface.dart';
 import 'package:study_recorder/data/recording/recording_model.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -123,11 +120,7 @@ class RecorderRepository implements RecorderRepositoryInterface {
       if (_type == RecordingType.video) {
         await _camera!.startVideoRecording();
       } else {
-        final dir = await getTemporaryDirectory();
-        final path = p.join(
-          dir.path,
-          'take_${DateTime.now().millisecondsSinceEpoch}.m4a',
-        );
+        final path = await getAudioTempPath();
         await _audio!.start(
           const RecordConfig(encoder: AudioEncoder.aacLc),
           path: path,
@@ -200,7 +193,7 @@ class RecorderRepository implements RecorderRepositoryInterface {
       if (_type != RecordingType.video || _cameras.length < 2) {
         return const Ok(null);
       }
-      final wanted = _current!.lensDirection == CameraLensDirection.back
+      final wanted = _current?.lensDirection == CameraLensDirection.back
           ? CameraLensDirection.front
           : CameraLensDirection.back;
       final next = _cameras.firstWhere(
@@ -222,8 +215,7 @@ class RecorderRepository implements RecorderRepositoryInterface {
   @override
   Future<Result<void>> discard(String path) async {
     try {
-      final file = File(path);
-      if (await file.exists()) await file.delete();
+      await deleteFileIfExists(path);
       return const Ok(null);
     } catch (e) {
       return Err(UnexpectedFailure(e.toString()));

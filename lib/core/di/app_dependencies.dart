@@ -1,8 +1,5 @@
-import 'dart:io';
-
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
+import 'package:study_recorder/core/storage/media_storage_provider.dart';
 import 'package:study_recorder/data/database/app_database.dart';
 import 'package:study_recorder/data/folder/folder_repository.dart';
 import 'package:study_recorder/data/folder/folder_repository_interface.dart';
@@ -187,17 +184,24 @@ class AppDependencies {
 
   static Future<void> init() async {
     // 1. Data layer (the only place that knows the real implementations).
-    final database = AppDatabase(driftDatabase(name: 'study_recorder'));
-    final documents = await getApplicationDocumentsDirectory();
-    final mediaDir = Directory(p.join(documents.path, 'recordings'));
+    final database = AppDatabase(
+      driftDatabase(
+        name: 'study_recorder',
+        web: DriftWebOptions(
+          sqlite3Wasm: Uri.parse('sqlite3.wasm'),
+          driftWorker: Uri.parse('drift_worker.js'),
+        ),
+      ),
+    );
+    final storage = await MediaStoragePlatform.create();
 
     final FolderRepositoryInterface folders = FolderRepository(
       database,
-      mediaDir,
+      storage,
     );
     final RecordingRepositoryInterface recordings = RecordingRepository(
       database,
-      mediaDir,
+      storage,
     );
     final RecorderRepositoryInterface recorder = RecorderRepository();
     final PlayerRepositoryInterface player = PlayerRepository();

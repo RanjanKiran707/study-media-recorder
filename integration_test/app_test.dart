@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:study_recorder/app.dart';
 import 'package:study_recorder/core/di/app_dependencies.dart';
+import 'package:study_recorder/core/storage/media_storage_provider.dart';
 import 'package:study_recorder/core/errors/failure.dart';
 import 'package:study_recorder/core/errors/result.dart';
 import 'package:study_recorder/core/widgets/app_buttons.dart';
@@ -71,8 +72,8 @@ Future<AppEnv> startApp(WidgetTester tester) async {
   final db = AppDatabase(NativeDatabase.memory());
   final env = AppEnv(db, root);
   AppDependencies.instance = AppDependencies.fromRepositories(
-    FolderRepository(db, env.mediaDir),
-    RecordingRepository(db, env.mediaDir),
+    FolderRepository(db, MediaStoragePlatform(env.mediaDir)),
+    RecordingRepository(db, MediaStoragePlatform(env.mediaDir)),
     env.recorder,
     env.player,
   );

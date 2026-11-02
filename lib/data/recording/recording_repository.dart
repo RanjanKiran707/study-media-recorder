@@ -1,9 +1,7 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:path/path.dart' as p;
 import 'package:study_recorder/core/errors/failure.dart';
 import 'package:study_recorder/core/errors/result.dart';
+import 'package:study_recorder/core/storage/media_storage.dart';
 import 'package:study_recorder/data/database/app_database.dart';
 import 'package:study_recorder/data/database/result_stream.dart';
 import 'package:study_recorder/data/recording/recording_model.dart';
@@ -11,9 +9,9 @@ import 'package:study_recorder/data/recording/recording_repository_interface.dar
 
 class RecordingRepository implements RecordingRepositoryInterface {
   final AppDatabase _db;
-  final Directory _mediaDir;
+  final MediaStorage _storage;
 
-  RecordingRepository(this._db, this._mediaDir);
+  RecordingRepository(this._db, this._storage);
 
   @override
   Future<Result<RecordingModel>> addRecording({
@@ -25,13 +23,11 @@ class RecordingRepository implements RecordingRepositoryInterface {
     required int durationMs,
     required DateTime createdAt,
   }) async {
-    File? stored;
+    String? storedRelativePath;
     try {
-      await _mediaDir.create(recursive: true);
-      final relativePath = '$id${p.extension(sourcePath)}';
-      stored = await _moveFile(
-        File(sourcePath),
-        p.join(_mediaDir.path, relativePath),
+      storedRelativePath = await _storage.saveMedia(
+        id: id,
+        sourcePath: sourcePath,
       );
 
       await _db
@@ -42,7 +38,7 @@ class RecordingRepository implements RecordingRepositoryInterface {
               folderId: folderId,
               title: title,
               type: type.name,
-              filePath: relativePath,
+              filePath: storedRelativePath,
               durationMs: durationMs,
               createdAt: createdAt.millisecondsSinceEpoch,
             ),
@@ -53,7 +49,7 @@ class RecordingRepository implements RecordingRepositoryInterface {
           folderId: folderId,
           title: title,
           type: type,
-          filePath: relativePath,
+          filePath: storedRelativePath,
           durationMs: durationMs,
           createdAt: createdAt,
         ),
@@ -61,7 +57,9 @@ class RecordingRepository implements RecordingRepositoryInterface {
     } catch (e) {
       // Do not leave a file behind that has no row.
       try {
-        if (stored != null && await stored.exists()) await stored.delete();
+        if (storedRelativePath != null) {
+          await _storage.deleteMedia(storedRelativePath);
+        }
       } catch (_) {}
       return Err(StorageFailure(e.toString()));
     }
@@ -116,10 +114,9 @@ class RecordingRepository implements RecordingRepositoryInterface {
         _db.recordingTable,
       )..where((t) => t.id.equals(recordingId))).go();
 
-      // The row is gone, so a file that cannot be removed is only left over.
+      // The row is gone, so remove the media file.
       try {
-        final file = File(p.join(_mediaDir.path, row.filePath));
-        if (await file.exists()) await file.delete();
+        await _storage.deleteMedia(row.filePath);
       } catch (_) {}
       return const Ok(null);
     } catch (e) {
@@ -170,19 +167,7 @@ class RecordingRepository implements RecordingRepositoryInterface {
 
   @override
   String absolutePath(RecordingModel recording) =>
-      p.join(_mediaDir.path, recording.filePath);
-
-  /// Renames the file, or copies it when the two paths are on different
-  /// volumes (the recorder writes to the cache directory).
-  Future<File> _moveFile(File source, String targetPath) async {
-    try {
-      return await source.rename(targetPath);
-    } on FileSystemException {
-      final copy = await source.copy(targetPath);
-      await source.delete();
-      return copy;
-    }
-  }
+      _storage.resolveUri(recording.filePath);
 
   RecordingModel _toModel(RecordingRow row) => RecordingModel(
     id: row.id,

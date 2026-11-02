@@ -1,12 +1,11 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 import 'package:study_recorder/core/errors/failure.dart';
 import 'package:study_recorder/core/errors/result.dart';
 import 'package:study_recorder/data/player/player_model.dart';
+import 'package:study_recorder/data/player/player_platform_helpers.dart';
 import 'package:study_recorder/data/player/player_repository_interface.dart';
 import 'package:study_recorder/data/recording/recording_model.dart';
 import 'package:video_player/video_player.dart';
@@ -117,13 +116,11 @@ class PlayerRepository implements PlayerRepositoryInterface {
 
       if (track.type == RecordingType.audio) {
         final duration = await _audio.setAudioSource(
-          AudioSource.file(
+          createAudioSource(
             track.filePath,
-            tag: MediaItem(
-              id: track.recordingId,
-              title: track.title,
-              album: track.folderName,
-            ),
+            id: track.recordingId,
+            title: track.title,
+            album: track.folderName,
           ),
         );
         if (generation != _generation) return const Ok(null);
@@ -133,7 +130,7 @@ class PlayerRepository implements PlayerRepositoryInterface {
         // play() completes only when playback ends, so it is not awaited.
         unawaited(_audio.play());
       } else {
-        final video = VideoPlayerController.file(File(track.filePath));
+        final video = createVideoPlayer(track.filePath);
         await video.initialize();
         if (generation != _generation) {
           await video.dispose();

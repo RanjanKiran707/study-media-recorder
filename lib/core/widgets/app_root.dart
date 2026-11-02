@@ -20,8 +20,16 @@ class AppRoot extends StatelessWidget {
       builder: (context, child) => DefaultTextStyle(
         style: AppText.base,
         child: ColoredBox(
-          color: AppColors.background,
-          child: child ?? const SizedBox.shrink(),
+          color: const Color(0xFFE9E9E9),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 480),
+              child: ColoredBox(
+                color: AppColors.background,
+                child: child ?? const SizedBox.shrink(),
+              ),
+            ),
+          ),
         ),
       ),
     );

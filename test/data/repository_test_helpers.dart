@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:drift/native.dart';
 import 'package:study_recorder/core/errors/result.dart';
+import 'package:study_recorder/core/storage/media_storage_provider.dart';
 import 'package:study_recorder/data/database/app_database.dart';
 import 'package:study_recorder/data/folder/folder_model.dart';
 import 'package:study_recorder/data/folder/folder_repository.dart';
@@ -17,8 +18,8 @@ class DataTestEnv {
   final RecordingRepository recordings;
 
   DataTestEnv._(this.db, this.mediaDir, this.cacheDir)
-    : folders = FolderRepository(db, mediaDir),
-      recordings = RecordingRepository(db, mediaDir);
+    : folders = FolderRepository(db, MediaStoragePlatform(mediaDir)),
+      recordings = RecordingRepository(db, MediaStoragePlatform(mediaDir));
 
   static Future<DataTestEnv> create() async {
     final root = await Directory.systemTemp.createTemp('study_recorder_test_');

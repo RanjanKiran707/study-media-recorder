@@ -1,9 +1,7 @@
-import 'dart:io';
-
 import 'package:drift/drift.dart';
-import 'package:path/path.dart' as p;
 import 'package:study_recorder/core/errors/failure.dart';
 import 'package:study_recorder/core/errors/result.dart';
+import 'package:study_recorder/core/storage/media_storage.dart';
 import 'package:study_recorder/data/database/app_database.dart';
 import 'package:study_recorder/data/database/result_stream.dart';
 import 'package:study_recorder/data/folder/folder_model.dart';
@@ -11,9 +9,9 @@ import 'package:study_recorder/data/folder/folder_repository_interface.dart';
 
 class FolderRepository implements FolderRepositoryInterface {
   final AppDatabase _db;
-  final Directory _mediaDir;
+  final MediaStorage _storage;
 
-  FolderRepository(this._db, this._mediaDir);
+  FolderRepository(this._db, this._storage);
 
   @override
   Future<Result<void>> createFolder(FolderModel folder) async {
@@ -74,13 +72,10 @@ class FolderRepository implements FolderRepositoryInterface {
       )..where((t) => t.id.equals(folderId))).go();
       if (deleted == 0) return const Err(StorageFailure('folder_not_found'));
 
-      // The data is gone, so a file that cannot be removed is only left over.
-      for (final r in recordings) {
-        try {
-          final file = File(p.join(_mediaDir.path, r.filePath));
-          if (await file.exists()) await file.delete();
-        } catch (_) {}
-      }
+      // The data is gone, so remove the media files.
+      final paths = [for (final r in recordings) r.filePath];
+      await _storage.deleteMediaFiles(paths);
+
       return const Ok(null);
     } catch (e) {
       return Err(StorageFailure(e.toString()));
