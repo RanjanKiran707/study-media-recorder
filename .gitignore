@@ -11,3 +11,7 @@ android/local.properties
 android/.gradle/
 android/key.properties
 *.jks
+
+# Firebase
+.firebase/
+
