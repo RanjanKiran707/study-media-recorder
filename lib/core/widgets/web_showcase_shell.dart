@@ -388,49 +388,118 @@ class _PhoneMockupFrame extends StatelessWidget {
         borderRadius: BorderRadius.circular(36),
         child: Stack(
           children: [
-            // The running Flutter application!
+            // The running Flutter application with simulated mobile safe areas!
             Positioned.fill(
-              child: ColoredBox(
-                color: AppColors.background,
-                child: child,
+              child: MediaQuery(
+                data: MediaQuery.of(context).copyWith(
+                  padding: const EdgeInsets.only(top: 44, bottom: 24),
+                  viewPadding: const EdgeInsets.only(top: 44, bottom: 24),
+                ),
+                child: ColoredBox(
+                  color: AppColors.background,
+                  child: child,
+                ),
               ),
             ),
 
-            // Top speaker pill / camera island.
+            // Top Status Bar: Clock on left, Dynamic Island in center, Battery/Wifi on right.
             Align(
               alignment: Alignment.topCenter,
               child: IgnorePointer(
-                child: Container(
-                  margin: const EdgeInsets.only(top: 10),
-                  width: 110,
-                  height: 22,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF18181D),
-                    borderRadius: BorderRadius.circular(12),
+                child: SizedBox(
+                  height: 44,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 22),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // Left: Clock Time
+                        const Text(
+                          '9:41',
+                          style: TextStyle(
+                            color: AppColors.text,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: -0.2,
+                            decoration: TextDecoration.none,
+                          ),
+                        ),
+                        const Spacer(),
+                        // Center: Notch Pill
+                        Container(
+                          width: 112,
+                          height: 25,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF18181D),
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF2A2A35),
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Container(
+                                width: 38,
+                                height: 4.5,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF2A2A35),
+                                  borderRadius: BorderRadius.circular(3),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Spacer(),
+                        // Right: Status icons (Cellular, Wifi, Battery)
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: const [
+                            Icon(
+                              CupertinoIcons.bars,
+                              color: AppColors.text,
+                              size: 13,
+                            ),
+                            SizedBox(width: 5),
+                            Icon(
+                              CupertinoIcons.wifi,
+                              color: AppColors.text,
+                              size: 14,
+                            ),
+                            SizedBox(width: 5),
+                            Icon(
+                              CupertinoIcons.battery_100,
+                              color: AppColors.text,
+                              size: 17,
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                   ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Camera dot
-                      Container(
-                        width: 7,
-                        height: 7,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF2A2A35),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      // Speaker slit
-                      Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2A2A35),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ],
+                ),
+              ),
+            ),
+
+            // Bottom Home Indicator Bar
+            Align(
+              alignment: Alignment.bottomCenter,
+              child: IgnorePointer(
+                child: Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Container(
+                    width: 134,
+                    height: 4.5,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF18181D).withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(3),
+                    ),
                   ),
                 ),
               ),
