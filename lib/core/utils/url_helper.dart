@@ -1,0 +1,3 @@
+export 'url_helper_stub.dart'
+    if (dart.library.io) 'url_helper_io.dart'
+    if (dart.library.js_interop) 'url_helper_web.dart';
